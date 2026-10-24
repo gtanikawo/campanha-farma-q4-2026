@@ -1,12 +1,12 @@
 # Campanha de Incentivo CR Farma · Q4 2026
 
-Site da campanha (SPOT × Reckitt): **Placar Q4** e **Farma Cards**, publicado no Vercel a partir da pasta `site/`.
+Site da campanha (SPOT × Reckitt), publicado no Vercel a partir da pasta `site/`: **só o Farma Cards** (o jogo da campanha).
+O placar oficial é gerado e testado aqui (`03_HTML`), mas é de uso interno e **não** vai para o site; `/placar` redireciona para o início.
 
 | Página | Arquivo publicado | Gerado por |
 |---|---|---|
-| Início | `site/index.html` | `site_template/index.html` + `publicar.py` |
-| Placar Q4 | `site/placar/index.html` | `03_HTML/src/build_placar.py` |
-| Farma Cards | `site/cards/index.html` | `05_Farma_Cards_RPG/src/build_v2.py` |
+| Início = Farma Cards | `site/index.html` (e `site/cards/index.html`) | `05_Farma_Cards_RPG/src/build_v2.py` |
+| Placar oficial (interno) | não publicado | `03_HTML/src/build_placar.py` |
 
 ## Atualização semanal
 

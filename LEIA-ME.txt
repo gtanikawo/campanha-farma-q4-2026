@@ -8,10 +8,9 @@ COMO A CONTA E FEITA
 - Desempate = % de visitas cumpridas (pesquisas ate o planejado de cada loja / visitas planejadas).
 - Justificativas: banco bi_reckitt.
 
-SITE NO AR (publico, aberto com o link)
-  https://campanha-farma-q4-2026.vercel.app          (inicio)
-  https://campanha-farma-q4-2026.vercel.app/placar   (placar Q4)
-  https://campanha-farma-q4-2026.vercel.app/cards    (Farma Cards)
+SITE NO AR (publico, aberto com o link) - SO O JOGO
+  https://campanha-farma-q4-2026.vercel.app          (Farma Cards = link para o time)
+  O placar oficial NAO vai para o site (uso interno, 03_HTML); /placar redireciona para o inicio.
   Repositorio: https://github.com/gtanikawo/campanha-farma-q4-2026 (publico)
   Vercel: time Spot (spot-298c), projeto campanha-farma-q4-2026, publica a pasta site/
 

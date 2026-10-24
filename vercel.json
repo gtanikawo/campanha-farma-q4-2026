@@ -4,5 +4,9 @@
   "buildCommand": "",
   "installCommand": "",
   "outputDirectory": "site",
-  "cleanUrls": true
+  "cleanUrls": true,
+  "redirects": [
+    { "source": "/placar", "destination": "/", "permanent": false },
+    { "source": "/placar/:path*", "destination": "/", "permanent": false }
+  ]
 }
