@@ -52,14 +52,14 @@ def calcular(meses):
         ult = [m for m in meses if p['sup'].get(m)][-1]
         supraw = moda(p['sup'][ult])
         prom.append({'nome': titulo(p['raw']), 'sup': titulo(supraw).split()[0], 'supFull': titulo(supraw), 'uf': moda(p['uf']),
-                     'lojas': p['lojas'], 'exec': p['exec'], 'px': p['exec'] / p['lojas'], 'pvx': p['cump'] / p['plan'] if p['plan'] else 0})
+                     'lojas': p['lojas'], 'exec': p['exec'], 'plan': p['plan'], 'cump': p['cump'], 'px': p['exec'] / p['lojas'], 'pvx': p['cump'] / p['plan'] if p['plan'] else 0})
     prom.sort(key=ordem)
-    sup = [{'nome': titulo(s['raw']), 'prom': len(s['pessoas']), 'lojas': s['lojas'], 'exec': s['exec'],
+    sup = [{'nome': titulo(s['raw']), 'prom': len(s['pessoas']), 'lojas': s['lojas'], 'exec': s['exec'], 'plan': s['plan'], 'cump': s['cump'],
             'px': s['exec'] / s['lojas'], 'pvx': s['cump'] / s['plan'] if s['plan'] else 0} for s in S.values()]
     sup.sort(key=ordem)
     def fim(rows, campos):
         return [dict({c: r[c] for c in campos}, pos=i + 1, pct=round(r['px'] * 100, 1), pctv=round(r['pvx'] * 100, 1)) for i, r in enumerate(rows)]
-    return (fim(prom, ['nome', 'sup', 'supFull', 'uf', 'lojas', 'exec']), fim(sup, ['nome', 'prom', 'lojas', 'exec']), {'lojas': lojas, 'exec': execs})
+    return (fim(prom, ['nome', 'sup', 'supFull', 'uf', 'lojas', 'exec', 'plan', 'cump']), fim(sup, ['nome', 'prom', 'lojas', 'exec', 'plan', 'cump']), {'lojas': lojas, 'exec': execs})
 
 def dbr(iso): return f'{iso[8:10]}/{iso[5:7]}/{iso[:4]}'
 MESES = {}
@@ -68,12 +68,14 @@ for m in Q4:
     if m not in pacotes:
         MESES[CHAVE[m]] = {'label': NOME[m], 'sub': 'aguardando apuração', 'disponivel': False}; continue
     prom, sup, tot = calcular([m]); c = pacotes[m]['corte']
-    MESES[CHAVE[m]] = {'prom': prom, 'sup': sup, 'tot': tot, 'label': NOME[m], 'sub': f'até {dbr(c)[:5]}', 'disponivel': True,
+    fech = int(c[8:10]) >= __import__('calendar').monthrange(int(m[:4]), int(m[5:]))[1]
+    MESES[CHAVE[m]] = {'prom': prom, 'sup': sup, 'tot': tot, 'label': NOME[m], 'sub': 'mês fechado' if fech else f'até {dbr(c)[:5]}', 'disponivel': True, 'corte': c, 'fechado': fech,
                        'titulo': f'de {NOME[m].lower()}', 'periodo': f'Apuração de <b>01/{m[5:]}</b> a <b>{dbr(c)[:5]}</b> · {NOME[m]}'}
 if disp:
     prom, sup, tot = calcular(disp); c = pacotes[disp[-1]]['corte']
     MESES['q4'] = {'prom': prom, 'sup': sup, 'tot': tot, 'label': 'Q4 acumulado', 'sub': '+'.join(NOME[m][:3].lower() for m in disp), 'disponivel': True,
-                   'titulo': 'parcial do Q4', 'periodo': f'Q4 2026 — acumulado parcial até {dbr(c)}'}
+                   'titulo': 'parcial do Q4', 'periodo': f'Q4 2026 — acumulado parcial até {dbr(c)}', 'corte': c,
+                   'fechado': len(disp) == 3 and all(MESES[CHAVE[m]]['fechado'] for m in disp), 'meses': [CHAVE[m] for m in disp]}
 
 # conferência com o placar original (outubro): ranking, totais e campos têm que ser idênticos
 orig = json.loads(re.search(r'const MESES = (\{.*?\});\s*\n\s*const ORDEM_MESES', ORIGINAL.read_text(encoding='utf-8-sig'), re.S).group(1))
@@ -82,7 +84,8 @@ for k in ['out', 'q4']:
     for parte in ['prom', 'sup', 'tot']:
         a = MESES[k][parte]; b = orig[k][parte]
         if parte != 'tot':
-            b = [{c: r[c] for c in a[0]} for r in b]
+            campos = [c for c in a[0] if c in b[0]]
+            a = [{c: r[c] for c in campos} for r in a]; b = [{c: r[c] for c in campos} for r in b]
         if a != b: falhas.append(f'{k}.{parte} diferente do placar original')
 if falhas:
     print('PARA: ' + '; '.join(falhas)); sys.exit(1)

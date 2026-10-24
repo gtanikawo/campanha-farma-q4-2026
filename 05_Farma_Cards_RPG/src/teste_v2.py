@@ -129,25 +129,120 @@ with sync_playwright() as p:
     ok('Forja mostra propostas desligadas', pg.inner_text('#gatingInputs').count('desligada') == 2)
     pg.screenshot(path=str(PRINTS / '06_forja.png'), full_page=True)
 
-    # importação
+    # ---------- v3: oficial × RPG (base real) ----------
+    pg.click('.sidebar .nav-btn[data-page="collection"]'); pg.wait_for_timeout(300)
+    pg.locator('#collectionCards .player-card').first.click(); pg.wait_for_timeout(400)
+    ficha = pg.inner_text('#modalBody')
+    ok('Ficha: rótulos OFICIAL e RPG, elegibilidade pendente', 'OFICIAL' in ficha and 'RPG' in ficha and 'Pendente' in ficha)
+    ok('Ficha: faltam X XP e extrato de XP', 'Faltam' in ficha and 'XP base do PWR' in ficha)
+    tot = pg.evaluate("()=>{const r=findRowById(activeDetail);return [extratoXP(r).reduce((s,l)=>s+l.xp,0), xp(r)]}")
+    ok('Extrato de XP soma o XP total', tot[0] == tot[1], str(tot))
+    xp1 = pg.evaluate("()=>MESES.q4.prom.map(r=>xp({...r,kind:'prom'})).join()")
+    pg.keyboard.press('Escape')
+    for _ in range(3):
+        pg.locator('#collectionCards .player-card').first.click(); pg.wait_for_timeout(150); pg.keyboard.press('Escape')
+    ok('Abrir a mesma carta várias vezes não muda XP', pg.evaluate("()=>MESES.q4.prom.map(r=>xp({...r,kind:'prom'})).join()") == xp1)
+    rar = pg.evaluate("()=>MESES.q4.prom.map(r=>tier(r).id).join()")
+    pg.reload(); pg.wait_for_timeout(500)
+    ok('Mesmos dados = mesma raridade (após recarregar)', pg.evaluate("()=>MESES.q4.prom.map(r=>tier(r).id).join()") == rar)
+    pos0 = pg.evaluate("()=>MESES.q4.prom.map(r=>r.pos).join()")
+    pg.click('.sidebar .nav-btn[data-page="duel"]'); pg.wait_for_timeout(200)
+    for modo in ['rapido', 'tatico', 'equipe']:
+        pg.click(f'#duelModes button[data-mode="{modo}"]'); pg.wait_for_timeout(500)
+    txt = pg.inner_text('#duelResult')
+    ok('Confronto de equipe compara supervisores (SIMULAÇÃO)', 'SIMULAÇÃO' in txt and 'Confronto de equipe' in txt and pg.evaluate("()=>findRowById($('fighterA').value).kind") == 'sup')
+    pg.click('#duelModes button[data-mode="tatico"]'); pg.wait_for_timeout(2200)
+    ok('Análise tática mostra a contribuição de cada atributo no PWR', 'pontos de PWR' in pg.inner_text('#duelResult'))
+    pg.screenshot(path=str(PRINTS / '16_confronto_tatico.png'), full_page=True)
+    ok('Confronto não altera o ranking oficial', pg.evaluate("()=>MESES.q4.prom.map(r=>r.pos).join()") == pos0)
+    pg.click('.sidebar .nav-btn[data-page="quests"]'); pg.wait_for_timeout(300)
+    jt = pg.inner_text('#journeyBox')
+    ok('Missões: "Atingida até agora" (outubro parcial) e progresso com evidência', 'Atingida até agora' in jt and 'Progresso' in jt and 'Outubro: 98,2%' in jt)
+    ok('Missões de novembro e dezembro: Bloqueada', jt.count('Bloqueada') == 10)
+    pg.screenshot(path=str(PRINTS / '17_jornada.png'), full_page=True)
+    pg.click('.sidebar .nav-btn[data-page="chronicle"]'); pg.wait_for_timeout(300)
+    ok('Crônica: outubro parcial, nov/dez aguardando', 'Parcial até 22/10' in pg.inner_text('#monthTrack') and pg.inner_text('#monthTrack').count('Aguardando apuração') == 2)
+
+    # importação com prévia (base real)
     tmp = Path(tempfile.mkdtemp())
-    ruim = tmp / 'corrompido.html'; ruim.write_text('<html>sem dados</html>', encoding='utf-8')
     def espera_toast(trecho):
         try: pg.wait_for_function("t=>document.getElementById('toast').textContent.includes(t)", arg=trecho, timeout=4000); return True
         except Exception: return False
-    pg.evaluate("()=>{$('toast').textContent=''}")
-    pg.set_input_files('#importFile', str(ruim))
-    ok('Importar arquivo ruim: erro e dados intactos', espera_toast('Não foi possível importar') and pg.evaluate('MESES.q4.prom.length') == len(oficial['q4']['prom']))
-    pg.evaluate("()=>{$('toast').textContent=''}"); pg.set_input_files('#importFile', str(PLACAR))
-    ok('Importar HTML oficial', espera_toast('importado com sucesso'))
-    js = tmp / 'placar.json'; js.write_text(json.dumps({'MESES': oficial}, ensure_ascii=False), encoding='utf-8')
-    pg.evaluate("()=>{$('toast').textContent=''}"); pg.set_input_files('#importFile', str(js))
-    ok('Importar JSON compatível', espera_toast('importado com sucesso'))
-    salvo = pg.evaluate("()=>JSON.parse(localStorage.getItem('farmaCards.data.v2')||'null')")
-    ok('Importação guardada com carimbo da base', salvo and salvo['base'] == pg.evaluate('BASE_STAMP'))
-    pg.evaluate("()=>localStorage.setItem('farmaCards.data.v2',JSON.stringify({base:'versao-antiga',meses:MESES}))")
-    pg.reload(); pg.wait_for_timeout(600)
-    ok('Dado de versão antiga é descartado ao abrir', pg.evaluate("()=>localStorage.getItem('farmaCards.data.v2')") is None)
+    ruim = tmp / 'corrompido.html'; ruim.write_text('<html>sem dados</html>', encoding='utf-8')
+    pg.evaluate("()=>{$('toast').textContent=''}"); pg.set_input_files('#importFile', str(ruim))
+    ok('Arquivo sem dados: erro e dados intactos', espera_toast('Não foi possível ler') and pg.evaluate('MESES.q4.prom.length') == len(oficial['q4']['prom']))
+    pg.set_input_files('#importFile', str(PLACAR)); pg.wait_for_selector('#importModal:not([hidden])', timeout=4000)
+    ok('Importar outubro de novo: prévia diz que nada muda e não deixa confirmar', 'nada muda' in pg.inner_text('#importBody') and pg.is_disabled('#importConfirm'))
+    pg.click('#importCancel')
+    ok('XP igual depois de reimportar outubro', pg.evaluate("()=>MESES.q4.prom.map(r=>xp({...r,kind:'prom'})).join()") == xp1)
+
+    # ---------- v3: dados ARTIFICIAIS (cópia separada do HTML, nomes TESTE) ----------
+    def linha(nome, sup, uf, lojas, ex, plan, cump):
+        return {'nome': nome, 'sup': sup.split()[0], 'supFull': sup, 'uf': uf, 'lojas': lojas, 'exec': ex, 'plan': plan, 'cump': cump}
+    def mes(rows, label, corte, fechado):
+        def rank(rs):
+            rs = sorted(rs, key=lambda r: (-r['exec'] / r['lojas'], -(r['cump'] / r['plan']), r['nome']))
+            return [dict(r, pos=i + 1, pct=round(r['exec'] / r['lojas'] * 100, 1), pctv=round(r['cump'] / r['plan'] * 100, 1)) for i, r in enumerate(rs)]
+        prom = rank(rows); sups = {}
+        for r in rows:
+            s = sups.setdefault(r['supFull'], {'nome': r['supFull'], 'prom': 0, 'lojas': 0, 'exec': 0, 'plan': 0, 'cump': 0})
+            s['prom'] += 1; s['lojas'] += r['lojas']; s['exec'] += r['exec']; s['plan'] += r['plan']; s['cump'] += r['cump']
+        return {'prom': prom, 'sup': rank(list(sups.values())), 'tot': {'lojas': sum(r['lojas'] for r in rows), 'exec': sum(r['exec'] for r in rows)},
+                'label': label, 'sub': 'mês fechado' if fechado else 'parcial', 'disponivel': True, 'corte': corte, 'fechado': fechado, 'titulo': label, 'periodo': label}
+    def soma(*meses_):
+        acc = {}
+        for m in meses_:
+            for r in m['prom']:
+                a = acc.setdefault(r['nome'], dict(linha(r['nome'], r['supFull'], r['uf'], 0, 0, 0, 0)))
+                for c in ['lojas', 'exec', 'plan', 'cump']: a[c] += r[c]
+        return mes(list(acc.values()), 'Q4 acumulado', meses_[-1]['corte'], False)
+    OUT = [linha('ANA TESTE', 'SUP TESTE UM', 'SP', 100, 80, 200, 150), linha('BRUNO TESTE', 'SUP TESTE UM', 'RJ', 50, 20, 100, 30), linha('CARLA TESTE', 'SUP TESTE DOIS', 'MG', 40, 39, 80, 70)]
+    NOV = [linha('ANA TESTE', 'SUP TESTE UM', 'SP', 120, 108, 240, 200), linha('BRUNO TESTE', 'SUP TESTE UM', 'RJ', 50, 50, 100, 90), linha('CARLA TESTE', 'SUP TESTE DOIS', 'MG', 40, 40, 80, 80)]
+    mo = mes(OUT, 'Outubro', '2026-10-31', True); mn = mes(NOV, 'Novembro', '2026-11-20', False)
+    DEZ_AUS = {'label': 'Dezembro', 'sub': 'aguardando', 'disponivel': False}
+    base_t = {'out': mo, 'nov': {'label': 'Novembro', 'sub': 'aguardando', 'disponivel': False}, 'dez': DEZ_AUS, 'q4': soma(mo)}
+    h2 = V2.read_text(encoding='utf-8')
+    i0 = h2.index('const BASE_DATA = '); i1 = h2.index('\nlet MESES = clone(BASE_DATA);')
+    HT = tmp / 'cards_TESTE_artificial.html'; HT.write_text(h2[:i0] + 'const BASE_DATA = ' + json.dumps(base_t) + ';' + h2[i1:], encoding='utf-8')
+    tc = b.new_context(viewport={'width': 1366, 'height': 900}); tp = tc.new_page(); errt = []
+    tp.on('pageerror', lambda e: errt.append(str(e)))
+    tp.goto(HT.as_uri()); tp.wait_for_timeout(500)
+    ok('[TESTE] Outubro fechado: missão "Concluída"', 'Concluída' in tp.evaluate("()=>missoesDe(findRowById('prom::ana teste')).filter(m=>m.feito).map(m=>m.estado.txt).join()"))
+    novo = {'out': mo, 'nov': mn, 'dez': DEZ_AUS, 'q4': soma(mo, mn)}
+    f = tmp / 'com_nov.json'; f.write_text(json.dumps(novo), encoding='utf-8')
+    tp.set_input_files('#importFile', str(f)); tp.wait_for_selector('#importModal:not([hidden])', timeout=4000)
+    pv = tp.inner_text('#importBody')
+    ok('[TESTE] Prévia mostra meses e totais antes de confirmar', 'Outubro (fechado)' in pv and 'Novembro (até 20/11)' in pv and not tp.is_disabled('#importConfirm'))
+    tp.click('#importConfirm'); tp.wait_for_timeout(400)
+    ac = tp.evaluate("()=>{const r=acumuladoAte('nov').get('prom::ana teste');return [r.lojas,r.exec,r.plan,r.cump]}")
+    ok('[TESTE] Acumulado out+nov conta cada mês uma vez (Ana 220/188)', ac == [220, 188, 440, 350], str(ac))
+    ok('[TESTE] Dezembro ausente não vira zero nem mês concluído', tp.evaluate("()=>hasMonth('dez')") is False and tp.evaluate("()=>elegibilidade(findRowById('prom::ana teste')).st") == 'pendente')
+    ok('[TESTE] Missão do Ato II "Atingida até agora" (novembro parcial)', 'Atingida até agora' in tp.evaluate("()=>missoesDe(findRowById('prom::ana teste')).filter(m=>m.ato===2&&m.feito).map(m=>m.estado.txt).join()"))
+    xpA = tp.evaluate("()=>xp(findRowById('prom::ana teste'))")
+    tp.set_input_files('#importFile', str(f)); tp.wait_for_selector('#importModal:not([hidden])', timeout=4000)
+    ok('[TESTE] Reimportar o mesmo arquivo: nada muda e não soma XP', 'nada muda' in tp.inner_text('#importBody') and tp.is_disabled('#importConfirm') and tp.evaluate("()=>xp(findRowById('prom::ana teste'))") == xpA)
+    tp.click('#importCancel')
+    hist = tp.evaluate("()=>historico(findRowById('prom::bruno teste')).filter(h=>h.carregado).map(h=>h.acum.pos)")
+    ok('[TESTE] Crônica: posição no acumulado mês a mês (Bruno)', len(hist) == 2, str(hist))
+    mo2 = mes([OUT[0], OUT[1], linha('CARLA TESTE', 'SUP TESTE DOIS', 'MG', 40, 20, 80, 30)], 'Outubro', '2026-10-31', True)
+    corr = {'out': mo2, 'nov': mn, 'dez': DEZ_AUS, 'q4': soma(mo2, mn)}
+    f2 = tmp / 'correcao.json'; f2.write_text(json.dumps(corr), encoding='utf-8')
+    antes = tp.evaluate("()=>missoesDe(findRowById('prom::carla teste')).filter(m=>m.feito).map(m=>m.id).join()")
+    tp.set_input_files('#importFile', str(f2)); tp.wait_for_selector('#importModal:not([hidden])', timeout=4000); tp.click('#importConfirm'); tp.wait_for_timeout(400)
+    depois = tp.evaluate("()=>missoesDe(findRowById('prom::carla teste')).filter(m=>m.feito).map(m=>m.id).join()")
+    ok('[TESTE] Correção no dado oficial recalcula as missões (sem XP fantasma)', 'a1_over' in antes and 'a1_over' not in depois, f'{antes} -> {depois}')
+    ruim2 = json.loads(json.dumps(novo)); ruim2['out']['prom'][0]['pct'] = 150
+    f3 = tmp / 'ruim.json'; f3.write_text(json.dumps(ruim2), encoding='utf-8')
+    tp.set_input_files('#importFile', str(f3)); tp.wait_for_selector('#importModal:not([hidden])', timeout=4000)
+    ok('[TESTE] Percentual fora de 0–100 bloqueia a importação', 'Importação bloqueada' in tp.inner_text('#importBody') and tp.is_disabled('#importConfirm'))
+    tp.click('#importCancel')
+    tp.click('.sidebar .nav-btn[data-page="collection"]'); tp.wait_for_timeout(200); tp.select_option('#periodFilter', 'nov'); tp.wait_for_timeout(300)
+    ok('[TESTE] Coleção por período (novembro)', tp.evaluate('activeKey') == 'nov' and tp.locator('#collectionCards .player-card').count() == 5)
+    tp.click('#openPackTop'); tp.wait_for_timeout(200); tp.click('#revealPack'); tp.wait_for_timeout(1500)
+    ids = tp.evaluate("()=>packDraw.map(identity)")
+    ok('[TESTE] Pacote com cartas distintas', len(ids) == len(set(ids)) == 3)
+    ok('[TESTE] Console sem erros', not errt, '; '.join(errt[:2]))
+
 
     # celular
     mob = b.new_context(viewport={'width': 390, 'height': 844}, reduced_motion='reduce', is_mobile=True)

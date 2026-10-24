@@ -221,6 +221,17 @@ troca('<div class="notice"><strong>Importante:</strong> no arquivo parcial de ou
 h = h.replace("function refreshApp(){", "function refreshApp(){try{renderForgeRules()}catch(e){console.error(e)};", 1)
 troca("if(page==='forge')renderForge()", "if(page==='forge'){renderForge();renderForgeRules()}")
 
+# 14. v3 (plano de refinamento): oficial × RPG, missões com estado e evidência, ficha completa, extrato de XP,
+#     confronto em 3 modos, crônica com acumulado e variação, período na coleção, importação com prévia
+rpg_js = (AQUI / 'rpg_v3.js').read_text(encoding='utf-8')
+troca('\ninit();\n', '\n' + rpg_js.strip() + '\ninit();\ninitV3();\n')
+troca('<select id="roleFilter" class="control">', '<select id="periodFilter" class="control" aria-label="Período"></select><select id="roleFilter" class="control">')
+troca('<div class="duel-selects">', '<div class="view-segment duel-modes" id="duelModes" role="tablist" aria-label="Modo do confronto"><button type="button" class="active" data-mode="rapido">Duelo rápido</button><button type="button" data-mode="tatico">Análise tática</button><button type="button" data-mode="equipe">Confronto de equipe</button></div><div class="duel-selects">')
+troca('<div id="toast" class="toast" role="status" aria-live="polite">',
+      '<div id="importModal" class="modal" hidden><div class="modal-box"><div class="modal-head"><h2>Prévia da importação</h2><button class="xbtn" data-close="importModal" aria-label="Fechar">×</button></div><div id="importBody"></div>'
+      '<div class="detail-actions"><button class="btn primary" id="importConfirm">Confirmar importação</button><button class="btn" id="importCancel">Cancelar</button></div></div></div>'
+      '<div id="toast" class="toast" role="status" aria-live="polite">')
+
 if falhas:
     print('FALHAS:'); [print(' -', f) for f in falhas]; sys.exit(1)
 SAIDA.write_text(h, encoding='utf-8')
