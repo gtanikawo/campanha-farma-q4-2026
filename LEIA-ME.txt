@@ -8,6 +8,19 @@ COMO A CONTA E FEITA
 - Desempate = % de visitas cumpridas (pesquisas ate o planejado de cada loja / visitas planejadas).
 - Justificativas: banco bi_reckitt.
 
+SITE NO AR (publico, aberto com o link)
+  https://campanha-farma-q4-2026.vercel.app          (inicio)
+  https://campanha-farma-q4-2026.vercel.app/placar   (placar Q4)
+  https://campanha-farma-q4-2026.vercel.app/cards    (Farma Cards)
+  Repositorio: https://github.com/gtanikawo/campanha-farma-q4-2026 (publico)
+  Vercel: time Spot (spot-298c), projeto campanha-farma-q4-2026, publica a pasta site/
+
+VERSAO SEMANAL
+  1. python 03_HTML\src\extrai_mes_tracking.py "<Tracking .xlsb do mes>" 2026-11
+  2. python publicar.py            (gera e testa placar + cards; para se algo falhar)
+  3. git add -A ; git commit -m "Versao AAAA-MM-DD" ; git push   (o Vercel publica sozinho em ~1 min)
+  Fora do repositorio (.gitignore): 01_Bases, 02_Conferencias, 04_Scripts (tem acesso ao banco), planilhas.
+
 PASTAS
 01_Bases\<Mes>      roteiro do mes (OUTUBRO_CR FARMA.xlsx) + Performance de Lojas por KPI.xlsx (export Reckitt)
 02_Conferencias     conferencias (lojas por promotor: roteiro x placar)
