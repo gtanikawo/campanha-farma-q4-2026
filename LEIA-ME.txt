@@ -1,0 +1,29 @@
+CAMPANHA DE INCENTIVO CR FARMA - Q4 2026 (out, nov, dez)
+Premia 3 promotores + 1 supervisor pelo % de lojas do roteiro executadas no trimestre.
+
+COMO A CONTA E FEITA
+- Loja executada = loja do roteiro do mes com pelo menos 1 pesquisa no "Performance de Lojas por KPI" do mes (Loja ID).
+- Placar = lojas executadas / lojas do roteiro (somando out, nov e dez).
+- Fora da conta: vaga em aberto e loja abonada (Planejado Real = 0: confinamento, fechada, inexistente, clique e retire).
+- Desempate = % de visitas cumpridas (pesquisas ate o planejado de cada loja / visitas planejadas).
+- Justificativas: banco bi_reckitt.
+
+PASTAS
+01_Bases\<Mes>      roteiro do mes (OUTUBRO_CR FARMA.xlsx) + Performance de Lojas por KPI.xlsx (export Reckitt)
+02_Conferencias     conferencias (lojas por promotor: roteiro x placar)
+03_HTML             placar para enviar ao campo (abre direto no navegador/celular)
+                    Placar_Farma_Q4_2026_Ajustado.html = VERSAO ATUAL (out/nov/dez/Q4, elegibilidade, importacao de mes)
+                    Placar_Farma_Q4_2026_Parcial_Outubro.html = original de 23/10 (referencia, nao editar)
+                    FORMATO_DADOS.md = formato do JSON/CSV do mes e como atualizar
+                    src\ = extrai_mes_tracking.py -> build_placar.py -> teste_placar.py (41 testes)
+04_Scripts          validacao: rodar banco_abono.py (VPN) e depois valida_placar.py + relatorio_validacao.py
+05_Farma_Cards_RPG  versao gamificada (cartas RPG). origem_v1 = prototipo + guia + prompt originais (nao editar)
+
+ORIGEM DOS ARQUIVOS
+- Roteiro:     K:\03. RECKITT\INTELIGENCIA\01.ROTEIRO\FARMA\BASES_NP\2026_OUTUBRO\OUTUBRO_CR FARMA.xlsx
+- Performance: K:\03. RECKITT\INTELIGENCIA\04.NEWS_PAGE\2026\10.OUT\Pesquisas NewsPage\Farma\Dataset\Performance de Lojas por KPI.xlsx
+
+SITUACAO EM 23/10/2026
+- Outubro parcial, dados de 01/10 a 22/10. 89 promotores, 4.815 de 7.072 lojas executadas (68,1%).
+- Performance x Tracking NP: 4.815 = 4.815 lojas executadas, 0 divergencia.
+- Pagina online (privada): https://claude.ai/artifact/6pJRG6ernxC63LEo9aJ6fA

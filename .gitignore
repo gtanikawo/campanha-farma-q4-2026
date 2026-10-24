@@ -1,0 +1,16 @@
+# Fora do repositório público: bases de origem, conferências e scripts que acessam o banco
+01_Bases/
+02_Conferencias/
+04_Scripts/
+*.xlsx
+*.xlsb
+*.xls
+*.pkl
+*.parquet
+# Arquivos gerados para teste/visualização local
+**/prints/
+**/src/artifact_*.html
+__pycache__/
+~$*
+desktop.ini
+.vercel

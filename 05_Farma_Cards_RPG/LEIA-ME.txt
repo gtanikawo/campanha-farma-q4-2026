@@ -1,0 +1,28 @@
+FARMA CARDS Q4 - v2 (nossa versao, com manutencao)
+
+ARQUIVO PARA ENVIAR
+  Farma_Cards_Q4_Legends_RPG_v2.html   (abre direto no Edge/Chrome, funciona sem internet)
+  Pagina online (privada): https://claude.ai/artifact/1L2qZNXGTE5obAKPQdQ6db
+
+PASTAS
+  origem_v1\   prototipo, guia completo e prompt mestre ORIGINAIS. Nao editar.
+  src\         o que gera a v2:
+     build_v2.py      gera a v2 a partir do origem_v1 + placar oficial (03_HTML) + v2.css + logos
+     v2.css           visual claro Reckitt
+     teste_v2.py      teste de navegador (Playwright): 54 checagens, inclui simulação de nov/dez + prints em src\prints
+     missoes.js       missoes em 3 atos (1 por mes) + trilha de recompensas: editar aqui metas e XP
+     spot_logo.png / reckitt_logo.svg   logos oficiais embutidos
+     artifact_farma_cards_q4.html   copia para a pagina online (gerada pelo build)
+
+COMO ATUALIZAR (novo mes ou ajuste)
+  1. Atualizar o placar oficial em 03_HTML (mesmo nome ou ajustar PLACAR no build_v2.py).
+  2. python src\build_v2.py      (para se algum trecho nao for encontrado)
+  3. python src\teste_v2.py      (tem que dar "54 de 54 OK"; olhar os prints)
+  4. Enviar o novo Farma_Cards_Q4_Legends_RPG_v2.html. Quem importou um placar antigo
+     perde a importacao automaticamente (o dado salvo tem o carimbo da base).
+
+REGRAS FIXAS
+  - Ranking oficial = posicao do placar. Raridade, PWR, XP, selos e confronto nao mexem em posicao nem premio.
+  - O numero das cartas e o % de lojas executadas (nao e a nota NP da pesquisa). Regra isolada em getNPScore().
+  - Faixas de raridade e requisitos ficam no codigo (DEFAULT_THRESHOLDS / DEFAULT_GATES / PROPOSALS); a Forja so mostra.
+  - Mes sem dado fica selado, nunca zerado.

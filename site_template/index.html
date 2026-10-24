@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Campanha Farma Q4</title>
+<meta name="theme-color" content="#FF1B83">
+<link rel="icon" type="image/svg+xml" href="__RK_LOGO__">
+<style>
+/* Página inicial: escolha entre o placar oficial e o Farma Cards. Claro, rosa Reckitt, texto grafite. */
+:root{--bg:#F7F5F9;--surface:#FFFFFF;--tint:#FFF0F7;--tint2:#FFE0EE;--line:#E8E2EE;--pink:#FF1B83;--pink-deep:#D3006A;--text:#3C3C3B;--muted:#6B6478;
+  --font:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;--mono:ui-monospace,"Cascadia Mono",Consolas,monospace;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 85% -10%,#FFE6F2 0,transparent 45%),var(--bg);color:var(--text);font-family:var(--font)}
+.wrap{max-width:960px;margin:0 auto;padding-block:40px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.logos{display:flex;align-items:center;gap:14px}
+.logo{width:132px;height:52px;display:flex;align-items:center;justify-content:center}
+.logo img{width:100%;height:100%;object-fit:contain}
+.uniao{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--tint);border:1.5px solid var(--pink);color:var(--pink)}
+.uniao svg{width:17px;height:17px}
+.eyebrow{margin-top:34px;font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--pink-deep);font-weight:700}
+h1{margin:10px 0 8px;font-size:clamp(30px,5vw,46px);line-height:1.05;letter-spacing:-.03em;text-wrap:balance}
+h1 em{font-style:normal;color:var(--pink)}
+.lead{margin:0;color:var(--muted);font-size:15px;line-height:1.6;max-width:62ch}
+.status{display:inline-block;margin-top:16px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--pink-deep);background:var(--surface);border:1px solid var(--tint2);border-radius:8px;padding:6px 10px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:30px}
+.card{display:flex;flex-direction:column;gap:10px;padding:22px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:0 12px 30px -20px rgba(60,60,59,.35);color:inherit;text-decoration:none;transition:transform .18s,border-color .18s}
+.card:hover{transform:translateY(-3px);border-color:var(--tint2)}
+.card:focus-visible{outline:2px solid var(--pink);outline-offset:3px}
+.card .tag{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.card h2{margin:0;font-size:22px}
+.card p{margin:0;color:var(--muted);font-size:14px;line-height:1.55}
+.card .go{margin-top:auto;font-weight:700;color:var(--pink-deep)}
+.card.main{background:linear-gradient(140deg,var(--tint),#FFFFFF 70%);border-color:var(--tint2)}
+footer{margin-top:34px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.6}
+@media (max-width:640px){.grid{grid-template-columns:1fr}.logo{width:104px;height:42px}}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logos">
+    <span class="logo"><img src="__SPOT_LOGO__" alt="SPOT"></span>
+    <span class="uniao" role="img" aria-label="em parceria com"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <span class="logo"><img src="__RK_LOGO__" alt="Reckitt"></span>
+  </div>
+  <div class="eyebrow">Campanha de incentivo · CR Farma</div>
+  <h1>Q4 2026 de lojas <em>executadas</em></h1>
+  <p class="lead">Outubro, novembro e dezembro. Os 3 promotores e o supervisor com a maior porcentagem de lojas do roteiro executadas no trimestre são os destaques.</p>
+  <div class="status">__STATUS__</div>
+  <div class="grid">
+    <a class="card main" href="placar/"><span class="tag">Resultado oficial</span><h2>Placar Q4</h2><p>Ranking de promotores e supervisores por mês e no acumulado do trimestre, com elegibilidade e a busca pelo seu nome.</p><span class="go">Abrir o placar →</span></a>
+    <a class="card" href="cards/"><span class="tag">Jogo da campanha</span><h2>Farma Cards</h2><p>Cada promotor vira uma carta. Missões em 3 atos, selos e recompensas ao longo do trimestre. Não muda o ranking oficial.</p><span class="go">Abrir as cartas →</span></a>
+  </div>
+  <footer>Versão __VERSAO__ · dados até __CORTE__ · fonte: Tracking Pesquisas NewsPage Farma.</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,404 @@
+  <!-- VISÃO COMPLETA -->
+  <div id="fullView">
+    <div class="scoreboard">
+      <div>
+        <div class="eyebrow"><span class="dot"></span>Campanha de incentivo · CR Farma</div>
+        <div class="status-q4" id="statusQ4"></div>
+        <h1>Placar Q4 de lojas <em>executadas</em></h1>
+        <div class="period" id="periodo"></div>
+      </div>
+      <div class="clock">
+        <div class="big num" id="liderVal">—</div>
+        <div class="lbl" id="liderLbl">Líder do placar</div>
+        <div class="who" id="liderNome"></div>
+      </div>
+    </div>
+
+    <div class="aviso" id="avisoDados" hidden></div>
+
+    <div class="rules">
+      <div class="rule"><b>Loja executada</b><p>Loja do roteiro do mês com pelo menos 1 pesquisa NewsPage no mês.</p></div>
+      <div class="rule"><b>Placar</b><p>Lojas executadas ÷ lojas do roteiro. No Q4, soma os totais dos meses apurados (não é média dos %).</p></div>
+      <div class="rule"><b>Desempate</b><p>% de visitas cumpridas: pesquisas até o planejado de cada loja ÷ visitas planejadas.</p></div>
+      <div class="rule"><b>Premiação</b><p>3 promotores e 1 supervisor destaque do trimestre. Só é elegível quem tem roteiro nos 3 meses (coluna Elegibilidade Q4).</p></div>
+    </div>
+
+    <div class="kpis num" id="kpiRow"></div>
+
+    <div class="controls">
+      <div class="tabs" role="tablist" aria-label="Grupo">
+        <button type="button" class="tab active" data-group="prom">Promotores</button>
+        <button type="button" class="tab" data-group="sup">Supervisores</button>
+      </div>
+      <div class="period-switch">
+        <span>Período</span>
+        <div class="pills" id="mesPills"></div>
+      </div>
+    </div>
+
+    <section class="panel" id="panel-prom"></section>
+    <section class="panel" id="panel-sup" hidden></section>
+
+    <section class="base-panel" aria-labelledby="h-base">
+      <h2 class="st" id="h-base">Base de dados do placar</h2>
+      <div class="tscroll"><table class="num base-table"><thead><tr><th>Mês</th><th>Situação</th><th class="r">Lojas no roteiro</th><th>Dados até</th><th>Atualizado em</th><th>Origem</th></tr></thead><tbody id="baseInfo"></tbody></table></div>
+      <div class="base-actions">
+        <label class="btn-imp" for="importFile">Importar mês (JSON ou CSV)</label>
+        <input id="importFile" type="file" accept=".json,.csv,application/json,text/csv" hidden>
+        <button type="button" class="btn-sec" id="resetBase">Voltar à base do arquivo</button>
+        <span class="imp-msg" id="impMsg" role="status" aria-live="polite"></span>
+      </div>
+      <p class="base-note">Importar um mês que já está no placar substitui esse mês (não soma de novo). Mês novo é incluído. As importações ficam salvas só neste navegador e neste computador: para todos verem, é preciso gerar e enviar uma nova versão do arquivo. Formato do arquivo: ver FORMATO_DADOS.md na pasta 03_HTML.</p>
+    </section>
+
+    <footer id="rodape"></footer>
+  </div>
+
+  <!-- PÓDIO POR SUPERVISOR -->
+  <div id="timesView" hidden>
+    <div class="view-panel">
+      <div class="eyebrow"><span class="dot"></span>Campanha de incentivo · CR Farma</div>
+      <div class="status-q4" id="statusTimes"></div>
+      <h1>Pódio de cada time</h1>
+      <div class="period" id="periodoTimes"></div>
+      <div class="team-grid" id="teamGrid"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ===== Dados =====
+   PACOTES_BASE: lojas do roteiro por mês (1 linha por mês + rota + loja), gerado por src/build_placar.py.
+   MESES: retrato calculado no build (mesma regra), mantido para compatibilidade com o Farma Cards. */
+const PACOTES_BASE = __PACOTES__;
+const MESES = __MESES__;
+const ORDEM_MESES = ['out','nov','dez','q4'];
+
+const Q4 = ['2026-10','2026-11','2026-12'];
+const NOME = {'2026-10':'Outubro','2026-11':'Novembro','2026-12':'Dezembro'};
+const CHAVE = {'2026-10':'out','2026-11':'nov','2026-12':'dez'};
+const COLS_PACOTE = ['cod_rota','loja_id','cod_colaborador','colaborador','supervisor','uf','planejado','pesquisas'];
+const LS_KEY = 'placarFarmaQ4.pacotes.v1';
+
+const pct = v => v.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}) + '%';
+const int = v => v.toLocaleString('pt-BR');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+const MED = ['🥇','🥈','🥉'];
+const LIGA = new Set(['DE','DA','DOS','DAS','E','DO']);
+const titulo = s => String(s).trim().split(/\s+/).map(w => LIGA.has(w) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+const dataBR = iso => iso ? iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4) : '—';
+const ultimoDia = m => { const [a,b] = m.split('-').map(Number); return new Date(a, b, 0).getDate(); };
+const fechado = p => !!(p && p.corte && Number(p.corte.slice(8,10)) >= ultimoDia(p.mes) && p.corte.slice(0,7) === p.mes);
+const ehVaga = nome => /VAGA/i.test(nome);
+
+/* ===== Pacotes: base do arquivo + importados neste navegador ===== */
+function lerLocal(){ try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}') || {}; } catch { return {}; } }
+function gravarLocal(o){ try { localStorage.setItem(LS_KEY, JSON.stringify(o)); return true; } catch { return false; } }
+function hashLojas(lojas){ let h = 2166136261; const s = JSON.stringify(lojas); for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(16); }
+function maisNovo(a, b){ if (!a) return b; if (!b) return a; return (b.corte > a.corte || (b.corte === a.corte && (b.atualizado_em||'') > (a.atualizado_em||''))) ? b : a; }
+let PACOTES = {};
+function montarPacotes(){
+  const loc = lerLocal(); PACOTES = {};
+  Q4.forEach(m => {
+    const base = PACOTES_BASE[m] ? {...PACOTES_BASE[m], origem:'arquivo'} : null;
+    const imp = loc[m] && validarPacote(loc[m]).ok ? {...loc[m], origem:'importado'} : null;
+    const escolhido = maisNovo(base, imp);
+    if (escolhido) PACOTES[m] = escolhido;
+  });
+}
+
+/* valida e limpa um pacote: campos obrigatórios, mês do Q4, corte dentro do mês, lojas repetidas */
+function validarPacote(p){
+  const erros = [], avisos = [];
+  if (!p || typeof p !== 'object') return {ok:false, erros:['arquivo vazio ou sem dados']};
+  if (p.formato !== 'placar-farma-q4/v1') erros.push('campo "formato" deve ser placar-farma-q4/v1');
+  if (!Q4.includes(p.mes)) erros.push(`mês "${p.mes}" não é do Q4 (use 2026-10, 2026-11 ou 2026-12)`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(p.corte||'') || (p.mes && p.corte.slice(0,7) !== p.mes)) erros.push('campo "corte" deve ser uma data AAAA-MM-DD dentro do mês');
+  if (!Array.isArray(p.lojas) || !p.lojas.length) erros.push('nenhuma loja no arquivo');
+  if (erros.length) return {ok:false, erros};
+  const vistos = new Set(), limpas = []; let rep = 0, ruins = 0;
+  for (const l of p.lojas){
+    const ok = Array.isArray(l) && l.length >= 8 && typeof l[1] === 'string' && l[1] && typeof l[3] === 'string' && l[3] && typeof l[4] === 'string' && typeof l[5] === 'string'
+      && Number.isFinite(Number(l[6])) && Number(l[6]) >= 1 && Number.isFinite(Number(l[7])) && Number(l[7]) >= 0;
+    if (!ok){ ruins++; continue; }
+    const k = (l[0] ?? '') + '|' + l[1];
+    if (vistos.has(k)){ rep++; continue; }
+    vistos.add(k); limpas.push([l[0] ?? null, l[1], l[2] ?? null, l[3], l[4], l[5], Number(l[6]), Number(l[7])]);
+  }
+  if (ruins) erros.push(`${ruins} linha(s) com campo obrigatório vazio ou inválido (loja_id, colaborador, supervisor, uf, planejado ≥ 1, pesquisas ≥ 0)`);
+  if (rep) avisos.push(`${rep} loja(s) repetida(s) na mesma rota foram contadas 1 vez`);
+  if (erros.length) return {ok:false, erros};
+  return {ok:true, avisos, pacote:{...p, lojas:limpas, hash: p.hash || hashLojas(limpas)}};
+}
+
+/* CSV: separador ; ou , com cabeçalho mes;corte;cod_rota;loja_id;cod_colaborador;colaborador;supervisor;uf;planejado;pesquisas[;atualizado_em] */
+function csvParaPacote(txt){
+  const linhas = txt.replace(/^﻿/,'').split(/\r?\n/).filter(x => x.trim());
+  if (linhas.length < 2) throw new Error('CSV sem linhas de dados');
+  const sep = linhas[0].split(';').length >= linhas[0].split(',').length ? ';' : ',';
+  const cab = linhas[0].split(sep).map(c => c.trim().toLowerCase());
+  const obrig = ['mes','corte','cod_rota','loja_id','cod_colaborador','colaborador','supervisor','uf','planejado','pesquisas'];
+  const falta = obrig.filter(c => !cab.includes(c));
+  if (falta.length) throw new Error('CSV sem as colunas: ' + falta.join(', '));
+  const ix = Object.fromEntries(cab.map((c,i)=>[c,i]));
+  const rows = linhas.slice(1).map(l => l.split(sep).map(x => x.trim()));
+  const meses = new Set(rows.map(r => r[ix.mes])), cortes = new Set(rows.map(r => r[ix.corte]));
+  if (meses.size !== 1 || cortes.size !== 1) throw new Error('o CSV deve ter um único mês e um único corte');
+  const n = v => v === '' ? null : Number(v.replace(',','.'));
+  return { formato:'placar-farma-q4/v1', mes:[...meses][0], corte:[...cortes][0], atualizado_em: ix.atualizado_em !== undefined ? rows[0][ix.atualizado_em] : new Date().toISOString().slice(0,16).replace('T',' '),
+    fonte:'CSV importado', colunas: COLS_PACOTE,
+    lojas: rows.map(r => [n(r[ix.cod_rota]), r[ix.loja_id], n(r[ix.cod_colaborador]), r[ix.colaborador], r[ix.supervisor], r[ix.uf], n(r[ix.planejado]), n(r[ix.pesquisas])]) };
+}
+
+/* ===== Cálculo (mesma regra do placar oficial) ===== */
+function moda(cont){ return Object.entries(cont).sort((a,b)=> b[1]-a[1] || (a[0] < b[0] ? -1 : 1))[0][0]; }
+function calcular(meses){
+  const P = new Map(), S = new Map(); let lojas = 0, exec = 0;
+  for (const m of meses){
+    for (const l of PACOTES[m].lojas){
+      const [,, cod, colab, sup, uf, plan, pesq] = l;
+      if (ehVaga(colab)) continue;
+      const e = pesq > 0 ? 1 : 0, c = Math.min(pesq, plan), k = norm(colab);
+      lojas++; exec += e;
+      let p = P.get(k); if (!p){ p = {nomeRaw:colab, lojas:0, exec:0, plan:0, cump:0, uf:{}, supM:{}, meses:new Set()}; P.set(k, p); }
+      p.lojas++; p.exec += e; p.plan += plan; p.cump += c; p.uf[uf] = (p.uf[uf]||0) + 1; p.meses.add(m);
+      (p.supM[m] = p.supM[m] || {})[sup] = (p.supM[m][sup] || 0) + 1;
+      const ks = norm(sup); let s = S.get(ks); if (!s){ s = {nomeRaw:sup, lojas:0, exec:0, plan:0, cump:0, pessoas:new Set(), meses:new Set()}; S.set(ks, s); }
+      s.lojas++; s.exec += e; s.plan += plan; s.cump += c; s.pessoas.add(k); s.meses.add(m);
+    }
+  }
+  const ord = (a,b) => b.px - a.px || b.pvx - a.pvx || (a.nome < b.nome ? -1 : a.nome > b.nome ? 1 : 0);
+  const prom = [...P.entries()].map(([k,p]) => { const ult = meses.filter(m => p.supM[m]).slice(-1)[0]; const supRaw = moda(p.supM[ult]);
+    return {key:k, nome:titulo(p.nomeRaw), sup:titulo(supRaw).split(' ')[0], supFull:titulo(supRaw), uf:moda(p.uf), lojas:p.lojas, exec:p.exec, plan:p.plan, cump:p.cump, px:p.exec/p.lojas, pvx:p.plan ? p.cump/p.plan : 0}; })
+    .sort(ord).map((r,i) => ({...r, pos:i+1, pct:Math.round(r.px*1000)/10, pctv:Math.round(r.pvx*1000)/10}));
+  const sup = [...S.entries()].map(([k,s]) => ({key:k, nome:titulo(s.nomeRaw), prom:s.pessoas.size, lojas:s.lojas, exec:s.exec, plan:s.plan, cump:s.cump, px:s.exec/s.lojas, pvx:s.plan ? s.cump/s.plan : 0}))
+    .sort(ord).map((r,i) => ({...r, pos:i+1, pct:Math.round(r.px*1000)/10, pctv:Math.round(r.pvx*1000)/10}));
+  return {prom, sup, tot:{lojas, exec}};
+}
+
+/* presença por mês (para a elegibilidade): promotor = tem loja no roteiro do mês; supervisor = aparece à frente de lojas no mês */
+function presencas(){
+  const pr = {}, su = {};
+  Q4.forEach(m => { if (!PACOTES[m]) return; pr[m] = new Set(); su[m] = new Set();
+    PACOTES[m].lojas.forEach(l => { if (!ehVaga(l[3])) { pr[m].add(norm(l[3])); su[m].add(norm(l[4])); } }); });
+  return {pr, su};
+}
+function elegibilidade(key, tipo, PRES){
+  const conj = tipo === 'sup' ? PRES.su : PRES.pr, com = [], sem = [], aguard = [];
+  Q4.forEach(m => { if (!PACOTES[m]) aguard.push(NOME[m]); else (conj[m].has(key) ? com : sem).push(NOME[m]); });
+  const lst = a => a.map(x => x.toLowerCase()).join(', ').replace(/, ([^,]*)$/, ' e $1');
+  const oque = tipo === 'sup' ? 'à frente de time' : 'com roteiro';
+  if (sem.length) return {st:'inelegivel', txt:'Inelegível', just:`Sem ${tipo === 'sup' ? 'time' : 'roteiro'} em ${lst(sem)} (mês apurado).`};
+  if (!aguard.length) return {st:'elegivel', txt:'Elegível', just:`${tipo === 'sup' ? 'À frente de time' : 'Com roteiro'} em outubro, novembro e dezembro.`};
+  return {st:'pendente', txt:'Pendente', just:`${oque.charAt(0).toUpperCase() + oque.slice(1)} em ${lst(com)}; aguardando ${lst(aguard)}.`};
+}
+
+/* ===== Visões por período ===== */
+let VIEWS = {};
+function montarViews(){
+  const PRES = presencas(); VIEWS = {};
+  const disp = Q4.filter(m => PACOTES[m]);
+  Q4.forEach(m => {
+    const k = CHAVE[m], p = PACOTES[m];
+    if (!p){ VIEWS[k] = {disponivel:false, label:NOME[m], sub:'aguardando apuração'}; return; }
+    const c = calcular([m]);
+    VIEWS[k] = {...c, disponivel:true, label:NOME[m], sub: fechado(p) ? 'mês fechado' : 'até ' + dataBR(p.corte).slice(0,5), titulo:'de ' + NOME[m].toLowerCase(),
+      status: `${NOME[m].toUpperCase()} 2026 — ${fechado(p) ? 'MÊS FECHADO' : 'PARCIAL ATÉ ' + dataBR(p.corte)}`, final: false,
+      periodo: `Apuração de <b>01/${m.slice(5)}</b> a <b>${dataBR(p.corte).slice(0,5)}</b> · ${NOME[m]}${fechado(p) ? '' : ' (parcial)'}`, meses:[m]};
+  });
+  if (disp.length){
+    const c = calcular(disp), ult = PACOTES[disp[disp.length-1]], final = disp.length === 3 && disp.every(m => fechado(PACOTES[m]));
+    VIEWS.q4 = {...c, disponivel:true, label:'Q4 acumulado', sub: disp.map(m => NOME[m].slice(0,3).toLowerCase()).join('+'), titulo: final ? 'final do Q4' : 'parcial do Q4', final,
+      status: final ? 'Q4 2026 — RESULTADO FINAL' : `Q4 2026 — ACUMULADO PARCIAL ATÉ ${dataBR(ult.corte)}`,
+      periodo: `Meses apurados: ${disp.map(m => NOME[m] + (fechado(PACOTES[m]) ? '' : ' (parcial até ' + dataBR(PACOTES[m].corte).slice(0,5) + ')')).join(' + ')}` + (disp.length < 3 ? ` · aguardando ${Q4.filter(m => !PACOTES[m]).map(m => NOME[m].toLowerCase()).join(' e ')}` : ''), meses:disp};
+  } else VIEWS.q4 = {disponivel:false, label:'Q4 acumulado', sub:'sem dados'};
+  Object.values(VIEWS).forEach(v => { if (!v.disponivel) return;
+    v.prom.forEach(r => r.eleg = elegibilidade(r.key, 'prom', PRES));
+    v.sup.forEach(r => r.eleg = elegibilidade(r.key, 'sup', PRES));
+    v.rodape = `Fonte: ${[...new Set(v.meses.map(m => PACOTES[m].fonte))].join(' · ')} · vaga em aberto fora do ranking · loja abonada (Planejado Real 0) fora da conta · loja repetida na mesma rota conta 1 vez`; });
+}
+
+/* ===== Tela ===== */
+let mes = 'q4', D = null;
+const st = { prom:{key:'pos',dir:1,q:'',uf:''}, sup:{key:'pos',dir:1,q:''} };
+
+function buildMesPills(){
+  document.getElementById('mesPills').innerHTML = ORDEM_MESES.map(k => { const m = VIEWS[k];
+    return `<button type="button" class="pill${k===mes?' active':''}" data-mes="${k}" ${m.disponivel?'':'disabled'}>${m.label}<small>${m.sub}</small></button>`; }).join('');
+  document.querySelectorAll('#mesPills .pill').forEach(b => b.addEventListener('click', () => setMes(b.dataset.mes)));
+}
+
+function buildKPIs(){
+  const p = D.prom, lider = p[0];
+  document.getElementById('statusQ4').textContent = D.status;
+  document.getElementById('statusTimes').textContent = D.status;
+  document.getElementById('liderVal').textContent = pct(lider.pct);
+  document.getElementById('liderNome').textContent = lider.nome;
+  document.getElementById('liderLbl').textContent = D.final ? 'Líder final' : 'Líder até agora';
+  const e = {elegivel:0, pendente:0, inelegivel:0}; p.forEach(r => e[r.eleg.st]++);
+  const k = [
+    {lbl:'Promotores na disputa', val:int(p.length), sub:`${D.sup.length} supervisores`, cls:''},
+    {lbl:'Líder', val:lider.nome.split(' ').slice(0,2).join(' '), sub:`${pct(lider.pct)} · ${lider.exec} de ${lider.lojas} lojas`, cls:'pink'},
+    {lbl:'Lojas executadas (geral)', val:pct(D.tot.exec/D.tot.lojas*100), sub:`${int(D.tot.exec)} de ${int(D.tot.lojas)} lojas`, cls:''},
+    {lbl:'Elegibilidade Q4', val: e.pendente === p.length ? 'Pendente' : `${int(e.elegivel)} elegíveis`, sub: `${int(e.elegivel)} elegíveis · ${int(e.pendente)} pendentes · ${int(e.inelegivel)} inelegíveis`, cls: e.pendente ? '' : 'ok'},
+  ];
+  document.getElementById('kpiRow').innerHTML = k.map(x => `<div class="kpi ${x.cls}"><div class="lbl">${x.lbl}</div><div class="val">${esc(x.val)}</div><div class="sub">${esc(x.sub)}</div></div>`).join('');
+  document.getElementById('periodo').innerHTML = D.periodo;
+  document.getElementById('periodoTimes').innerHTML = D.periodo;
+  document.getElementById('rodape').textContent = D.rodape;
+}
+
+const chip = e => `<span class="eleg ${e.st}" title="${esc(e.just)}">${e.txt}</span>`;
+function podium(rows, g){
+  return `<div class="podium num">${[1,0,2].map(i => { const r = rows[i]; if (!r) return '';
+    const meta = g==='prom' ? `${r.exec} de ${r.lojas} lojas · ${esc(r.uf)} · Sup. ${esc(r.sup)}` : `${int(r.exec)} de ${int(r.lojas)} lojas · ${r.prom} promotores`;
+    return `<div class="pod p${i+1}"><div class="medal">${MED[i]} ${i+1}º LUGAR</div><div class="name">${esc(r.nome)}</div><div class="pts">${pct(r.pct)}</div><div class="meta">${meta}</div><div class="meta">${chip(r.eleg)}</div></div>`; }).join('')}</div>`;
+}
+function chart(rows, g){
+  return `<div class="chart num">${rows.slice(0,10).map((r,i) => `
+    <div class="bar-row ${i<3?'t'+(i+1):''}">
+      <div class="bar-rank">${i+1}</div>
+      <div class="bar-name" title="${esc(r.nome)}">${esc(r.nome)}${g==='prom'?`<small>${esc(r.uf)}</small>`:''}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.max(2,r.pct)}%"></div></div>
+      <div class="bar-pts">${pct(r.pct)}</div>
+    </div>`).join('')}</div>`;
+}
+const COLS = {
+  prom:[['pos','Posição',''],['nome','Promotor',''],['sup','Supervisor',''],['uf','UF','c'],['exec','Lojas exec.','r'],['pct','% Lojas exec.','r'],['pctv','% Visitas (desempate)','r'],['eleg','Elegibilidade Q4','c']],
+  sup:[['pos','Posição',''],['nome','Supervisor',''],['prom','Promotores','r'],['exec','Lojas exec.','r'],['pct','% Lojas exec.','r'],['pctv','% Visitas','r'],['eleg','Elegibilidade Q4','c']]
+};
+function table(g){
+  const ufs = g==='prom' ? [...new Set(D.prom.map(r => r.uf))].sort() : [];
+  return `<div class="table-card">
+    <div class="toolbar">
+      <label class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="busca-${g}" type="search" placeholder="Buscar ${g==='prom'?'promotor':'supervisor'}..." value="${esc(st[g].q)}" aria-label="Buscar"></label>
+      ${g==='prom'?`<select id="uf-${g}" aria-label="Filtrar UF"><option value="">Todas as UF</option>${ufs.map(u => `<option value="${u}" ${st.prom.uf===u?'selected':''}>${u}</option>`).join('')}</select>`:''}
+      <span class="count" id="count-${g}"></span>
+    </div>
+    ${g==='prom'?'<div class="me" id="me" hidden></div>':''}
+    <div class="tscroll"><table class="num"><thead><tr>${COLS[g].map(([k,l,a]) => `<th data-key="${k}" class="${a}">${l} <span class="arrow"></span></th>`).join('')}</tr></thead><tbody id="tbody-${g}"></tbody></table></div>
+    <div class="empty" id="empty-${g}" hidden>Ninguém encontrado com essa busca.</div>
+  </div>`;
+}
+function renderPanel(g){
+  const el = document.getElementById('panel-'+g);
+  el.innerHTML = `<h2 class="st">Pódio ${D.titulo}</h2>${podium(D[g],g)}
+    <h2 class="st">Top 10 · % de lojas executadas</h2>${chart(D[g],g)}
+    <h2 class="st">Lista completa</h2>${table(g)}`;
+  el.querySelectorAll('th').forEach(th => th.addEventListener('click', () => { const s = st[g]; if (s.key===th.dataset.key) s.dir*=-1; else { s.key = th.dataset.key; s.dir = (['pct','pctv','exec','prom','lojas'].includes(s.key)) ? -1 : 1; } body(g); }));
+  el.querySelector('#busca-'+g).addEventListener('input', e => { st[g].q = e.target.value; body(g); });
+  if (g==='prom') el.querySelector('#uf-prom').addEventListener('change', e => { st.prom.uf = e.target.value; body(g); });
+  body(g);
+}
+
+/* Simulação: quantas lojas a mais passariam o 3º lugar de hoje, no denominador do período (lojas fixas do roteiro já previsto) */
+const AVISO_SIM = 'Simulação com a classificação atual. A posição final pode mudar conforme os resultados dos demais participantes e as próximas apurações.';
+function simulacao(r){
+  const c = D.prom[2], restam = r.lojas - r.exec;
+  if (r.pos <= 3) return `<b>${esc(r.nome)}</b> está em ${r.pos}º lugar na classificação atual, com ${pct(r.pct)}.`;
+  // menor n com (exec+n)/lojas > exec3/lojas3, em inteiros (sem erro de arredondamento): (exec+n)*lojas3 > exec3*lojas
+  let n = Math.floor((c.exec * r.lojas) / c.lojas) - r.exec + 1; if (n < 1) n = 1;
+  if (n > restam) return `<b>${esc(r.nome)}</b> está em ${r.pos}º lugar com ${pct(r.pct)}. Mesmo executando as ${restam} lojas que ainda faltam no roteiro deste período, não passaria o 3º lugar de hoje (${pct(c.pct)}).`;
+  const empata = (r.exec + n - 1) * c.lojas === c.exec * r.lojas;
+  return `<b>${esc(r.nome)}</b> está em ${r.pos}º lugar com ${pct(r.pct)}. Executando mais <b>${n} ${n===1?'loja':'lojas'}</b> das ${restam} que ainda faltam no roteiro deste período, passaria o 3º lugar de hoje (${pct(c.pct)})${empata ? `; com ${n-1} empataria e o desempate seria pelo % de visitas` : ''}.`;
+}
+function body(g){
+  const s = st[g]; let rows = [...D[g]];
+  const q = norm(s.q);
+  if (q) rows = rows.filter(r => norm(r.nome).includes(q));
+  if (g==='prom' && s.uf) rows = rows.filter(r => r.uf===s.uf);
+  const val = (r,k) => k==='eleg' ? r.eleg.txt : r[k];
+  rows.sort((a,b) => { let x = val(a,s.key), y = val(b,s.key); if (typeof x==='string'){ x = norm(x); y = norm(y); } return x<y ? -s.dir : x>y ? s.dir : a.pos - b.pos; });
+  document.getElementById('count-'+g).textContent = rows.length + (rows.length===1?' registro':' registros');
+  document.getElementById('empty-'+g).hidden = rows.length>0;
+  document.getElementById('tbody-'+g).innerHTML = rows.map(r => { const cls = (r.pos<=3?'top r'+r.pos:'');
+    return g==='prom'
+      ? `<tr class="${cls}"><td class="pos">${r.pos}º</td><td>${esc(r.nome)}</td><td>${esc(r.sup)}</td><td class="c">${esc(r.uf)}</td><td class="r mono">${r.exec}/${r.lojas}</td><td class="r pct">${pct(r.pct)}</td><td class="r mono">${pct(r.pctv)}</td><td class="c">${chip(r.eleg)}</td></tr>`
+      : `<tr class="${cls}"><td class="pos">${r.pos}º</td><td>${esc(r.nome)}</td><td class="r mono">${r.prom}</td><td class="r mono">${int(r.exec)}/${int(r.lojas)}</td><td class="r pct">${pct(r.pct)}</td><td class="r mono">${pct(r.pctv)}</td><td class="c">${chip(r.eleg)}</td></tr>`; }).join('');
+  document.querySelectorAll(`#panel-${g} th`).forEach(th => { const on = th.dataset.key===s.key; th.classList.toggle('sorted',on); th.querySelector('.arrow').textContent = on ? (s.dir===1?'▲':'▼') : ''; });
+  if (g==='prom'){
+    const me = document.getElementById('me');
+    if (q && rows.length===1){
+      const r = rows[0];
+      me.innerHTML = `${simulacao(r)}<span class="sim-aviso">${AVISO_SIM}${mes==='q4' && !D.final ? ' Os meses ainda não apurados vão somar lojas ao roteiro de todos.' : ''}</span><span class="sim-aviso">Elegibilidade Q4: ${esc(r.eleg.txt)}. ${esc(r.eleg.just)}</span>`;
+      me.hidden = false;
+    } else me.hidden = true;
+  }
+}
+
+function renderTimes(){
+  const lider = D.sup[0].nome, cores = ['var(--gold)','var(--silver)','var(--bronze)'];
+  document.getElementById('teamGrid').innerHTML = D.sup.map(s => { const rows = D.prom.filter(p => p.supFull===s.nome);
+    return `<div class="team${s.nome===lider?' lead':''}">
+      <div class="team-h"><b>${esc(s.nome.split(' ')[0])}</b><span class="num">time ${pct(s.pct)} · ${rows.length} promotores</span></div>
+      ${rows.slice(0,3).map((r,i) => `<div class="team-row"><span class="m" style="background:${cores[i]}">${i+1}</span><span class="n" title="${esc(r.nome)}">${esc(r.nome)}</span><span class="v num">${pct(r.pct)}</span></div>`).join('')}
+    </div>`; }).join('');
+}
+
+function renderBase(){
+  document.getElementById('baseInfo').innerHTML = Q4.map(m => { const p = PACOTES[m];
+    if (!p) return `<tr><td>${NOME[m]}</td><td><span class="eleg pendente">Aguardando apuração</span></td><td class="r">—</td><td>—</td><td>—</td><td>—</td></tr>`;
+    const nl = p.lojas.filter(l => !ehVaga(l[3])).length;
+    return `<tr><td>${NOME[m]}</td><td><span class="eleg ${fechado(p)?'elegivel':'pendente'}">${fechado(p)?'Mês fechado':'Parcial'}</span></td><td class="r">${int(nl)}</td><td>${dataBR(p.corte)}</td><td>${esc(p.atualizado_em||'—')}</td><td>${p.origem==='importado'?'Importado neste navegador':'Arquivo do placar'}</td></tr>`; }).join('');
+  const faltam = Q4.filter(m => !PACOTES[m]);
+  const av = document.getElementById('avisoDados');
+  av.hidden = !faltam.length;
+  av.innerHTML = faltam.length ? `<b>Trimestre em andamento.</b> ${faltam.map(m => NOME[m]).join(' e ')} ainda não ${faltam.length>1?'foram apurados':'foi apurado'}: ${faltam.length>1?'esses meses aparecem':'esse mês aparece'} como "aguardando apuração" e não entram no acumulado. A elegibilidade (roteiro nos 3 meses) só pode ser confirmada depois de dezembro.` : '';
+}
+
+function setMes(k){
+  if (!VIEWS[k] || !VIEWS[k].disponivel) return;
+  mes = k; D = VIEWS[k];
+  buildMesPills(); buildKPIs(); renderPanel('prom'); renderPanel('sup'); renderTimes(); renderBase();
+}
+function recarregar(msg){
+  montarPacotes(); montarViews();
+  if (!VIEWS[mes] || !VIEWS[mes].disponivel) mes = 'q4';
+  setMes(mes);
+  if (msg) document.getElementById('impMsg').textContent = msg;
+}
+
+document.getElementById('importFile').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    let msg;
+    try {
+      const txt = String(rd.result);
+      const bruto = /\.csv$/i.test(f.name) ? csvParaPacote(txt) : JSON.parse(txt);
+      const v = validarPacote(bruto);
+      if (!v.ok) throw new Error(v.erros.join('; '));
+      const novo = v.pacote, atual = PACOTES[novo.mes];
+      if (atual && atual.hash === novo.hash && atual.corte === novo.corte) msg = `${NOME[novo.mes]} já estava carregado com estes mesmos dados. Nada mudou.`;
+      else if (atual && novo.corte < atual.corte) throw new Error(`o arquivo é mais antigo (dados até ${dataBR(novo.corte)}) que o ${NOME[novo.mes].toLowerCase()} já carregado (até ${dataBR(atual.corte)})`);
+      else {
+        const loc = lerLocal(); loc[novo.mes] = novo;
+        if (!gravarLocal(loc)) throw new Error('o navegador não permitiu salvar a importação');
+        msg = atual ? `${NOME[novo.mes]} atualizado: substituiu os dados até ${dataBR(atual.corte)} pelos dados até ${dataBR(novo.corte)}.` : `${NOME[novo.mes]} incluído no placar (dados até ${dataBR(novo.corte)}).`;
+      }
+      if (v.avisos.length) msg += ' Aviso: ' + v.avisos.join('; ') + '.';
+      recarregar(msg);
+    } catch (err) { document.getElementById('impMsg').textContent = 'Não foi possível importar: ' + err.message + '. O placar continua com os dados anteriores.'; }
+    e.target.value = '';
+  };
+  rd.onerror = () => { document.getElementById('impMsg').textContent = 'Não foi possível ler o arquivo.'; };
+  rd.readAsText(f);
+});
+document.getElementById('resetBase').addEventListener('click', () => { try { localStorage.removeItem(LS_KEY); } catch {} recarregar('Importações deste navegador removidas. O placar voltou à base do arquivo.'); });
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x===t));
+  document.getElementById('panel-prom').hidden = t.dataset.group!=='prom';
+  document.getElementById('panel-sup').hidden = t.dataset.group!=='sup';
+}));
+document.querySelectorAll('.view-switch .pill').forEach(p => p.addEventListener('click', () => {
+  document.querySelectorAll('.view-switch .pill').forEach(x => x.classList.toggle('active', x===p));
+  document.getElementById('fullView').hidden = p.dataset.view!=='full';
+  document.getElementById('timesView').hidden = p.dataset.view!=='times';
+  window.scrollTo(0,0);
+}));
+
+recarregar();
+</script>

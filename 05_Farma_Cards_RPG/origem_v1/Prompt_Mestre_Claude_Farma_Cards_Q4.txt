@@ -1,0 +1,17 @@
+Leia integralmente os três arquivos anexados: o placar original Placar_Farma_Q4_2026_Parcial_Outubro.html, o protótipo Farma_Cards_Q4_Legends_RPG.html e o Guia_Completo_Claude_Farma_Cards_Q4_Legends.md.
+
+Crie uma nova versão funcional chamada Farma_Cards_Q4_Legends_RPG_v2.html, mantendo os arquivos originais intactos. Siga todas as regras técnicas, visuais, de dados e testes descritas no guia.
+
+O objetivo é um card game corporativo com estética original de RPG e cartas colecionáveis. Cada promotor e supervisor recebe uma carta com atributos reais, XP, nível, raridade, selos e histórico mensal. A aplicação deve ter Santuário, Coleção, ficha detalhada, invocação visual de até três cartas, Confronto, Missões & Selos, Crônica Q4 e Forja de raridade.
+
+Antes de codificar, confira o esquema MESES e a semântica dos campos na fonte. O campo pct do placar original é usado pelo protótipo como NP SCORE, mas confirme nos arquivos o que representa e isole a regra em getNPScore(registro). Não invente um campo NP que não exista. Use pos e os valores oficiais para o ranking; PWR, XP, nível, raridade, selos e confrontos são apenas RPG e nunca alteram posição, desempate ou premiação.
+
+Raridade inicial: Comum abaixo de 50%; Bronze >=50%; Prata >=65%; Ouro >=75%; Épica >=85%; Mítica >=95%. Mítica Holográfica exige adicionalmente pctv >=50 e exec >=15. Selos iniciais: NP Overdrive (NP>=85), Disciplina (pctv>=65), Impacto (exec>=40), Perfeição (pct>=99.95), Top 3 Parcial (pos<=3), Três Luas (mesma pessoa disponível nos três meses). Permita editar os limites na Forja. Requisitos adicionais de consistência trimestral e amostra mínima devem ser configuráveis e explicitamente tratados como propostas, não regras oficiais já confirmadas.
+
+Fórmulas RPG atuais: volumeIndex=min(100,exec/50*100); PWR=0.70*NP+0.20*pctv+0.10*volumeIndex; XP=round((PWR*PWR/100)*25); level=max(1,min(20,1+floor(XP/150))). Explicar tudo na interface. Qualquer alteração precisa ser documentada e não pode tocar no ranking oficial.
+
+Importar HTML oficial e JSON compatível. Para HTML, extrair o objeto const MESES antes de const ORDEM_MESES e validar com JSON.parse; nunca usar eval ou new Function. Validar antes de substituir dados e preservar estado válido se houver erro. Nunca converter meses ausentes em zeros. Se q4 existir no placar oficial, não somar novamente os meses cegamente. A aplicação deve ser um único HTML offline, sem chamadas externas ou upload de dados; localStorage apenas local e protegido com try/catch.
+
+Use arte original inspirada em card games/RPG, sem copiar logos, personagens ou layouts comerciais. Inclua animações fluidas de cartas, brilho, modal, orbe e partículas; respeite prefers-reduced-motion, navegação por teclado, Escape nos modais e responsividade.
+
+Valide números contra o arquivo original, todos os limites de raridade, Mítica selada/holográfica, filtros, busca, ordenação, lista/grade, modais, invocação, duelo, missões, cronologia, Forja, localStorage, importação HTML/JSON e arquivos inválidos. Verifique sintaxe e console. Não diga que testou visualmente no navegador se não o fez. Ao concluir, entregue o HTML final, resumo das mudanças, instruções de uso e limitações reais. Não invente dados de novembro/dezembro nem regras ausentes na fonte.

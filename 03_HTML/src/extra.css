@@ -1,0 +1,24 @@
+/* ===== Ajustes Q4 (status do período, elegibilidade, base de dados) ===== */
+.status-q4{display:inline-block;margin-top:10px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--pink-deep);background:var(--surface);border:1px solid var(--tint-2);border-radius:8px;padding:6px 10px}
+.aviso{margin-top:14px;padding:12px 16px;border-radius:var(--r-md);background:#FFF8E6;border:1px solid #F1D99A;color:#6E5410;font-size:13px;line-height:1.55}
+.aviso b{color:#5A4205}
+.eleg{display:inline-block;font-size:11px;font-weight:700;border-radius:99px;padding:3px 9px;white-space:nowrap;border:1px solid}
+.eleg.elegivel{color:#0B6B44;background:#E3F6EC;border-color:#A9DFC3}
+.eleg.pendente{color:#6B6478;background:#F3F0F6;border-color:#DDD5E6}
+.eleg.inelegivel{color:#A1123F;background:#FDE7EE;border-color:#F4B6C9}
+.pod .meta + .meta{margin-top:8px}
+.sim-aviso{display:block;margin-top:8px;font-size:12px;color:var(--muted)}
+.base-panel{margin-top:30px}
+.base-table{min-width:560px}
+.base-table td,.base-table th{font-size:13px}
+.base-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
+.btn-imp,.btn-sec{font-family:var(--cond);font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border-radius:10px;padding:10px 16px;cursor:pointer;border:1px solid var(--pink)}
+.btn-imp{background:var(--pink);color:#FFFFFF}
+.btn-sec{background:var(--surface);color:var(--pink-deep)}
+.btn-imp:focus-visible,.btn-sec:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+.imp-msg{font-size:13px;color:var(--text);flex:1 1 260px}
+.base-note{margin:10px 0 0;font-size:12px;color:var(--muted);line-height:1.6;max-width:90ch}
+/* logos sem fundo e do mesmo tamanho (pedido do Gustavo, 23/10) */
+.brand-chip{width:132px;height:52px;padding:0;background:none;border:0;justify-content:center}
+.brand-chip img{width:100%;height:100%;object-fit:contain}
+@media (max-width:600px){.brand-chip{width:104px;height:42px;padding:0}}
