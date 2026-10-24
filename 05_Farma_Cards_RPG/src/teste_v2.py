@@ -123,7 +123,7 @@ with sync_playwright() as p:
     ok('Crônica: nov e dez selados', pg.locator('.month-node.future[disabled]').count() == 2)
     pg.click('.sidebar .nav-btn[data-page="forge"]'); pg.wait_for_timeout(300)
     ok('Forja só leitura (sem campos)', pg.locator('#page-forge input').count() == 0 and pg.locator('#page-forge .setting-row').count() >= 12)
-    ok('Forja: 5 blocos de regras (raridade, classes, missões, trilha, fórmulas)', pg.locator('#forgeRules .forge-block').count() == 5)
+    ok('Forja: 6 blocos de regras (raridade, classes, missões, trilha, fórmulas, patente)', pg.locator('#forgeRules .forge-block').count() == 6)
     ok('Forja: 15 missões e 5 níveis da trilha listados', pg.locator('#forgeRules .forge-block').nth(2).locator('tbody tr').count() == 15 and pg.locator('#forgeRules .forge-block').nth(3).locator('tbody tr').count() == 5)
     ok('Forja: Mítica selada x holográfica e fórmulas de XP/nível', 'Mítica selada' in pg.inner_text('#forgeRules') and 'a cada 250 XP' in pg.inner_text('#forgeRules'))
     ok('Forja mostra propostas desligadas', pg.inner_text('#gatingInputs').count('desligada') == 2)
@@ -242,6 +242,46 @@ with sync_playwright() as p:
     ids = tp.evaluate("()=>packDraw.map(identity)")
     ok('[TESTE] Pacote com cartas distintas', len(ids) == len(set(ids)) == 3)
     ok('[TESTE] Console sem erros', not errt, '; '.join(errt[:2]))
+
+
+    # ---------- tempo de casa e supervisor Top 1 no Santuário (24/10) ----------
+    tcasa = json.loads((AQUI / 'dados' / 'tempo_casa.json').read_text(encoding='utf-8'))['pessoas']
+    pg.goto(V2.as_uri()); pg.wait_for_timeout(600)
+    sup1 = oficial['q4']['sup'][0]
+    supf = pg.inner_text('#supFeature')
+    ok('Santuário: supervisor Top 1 em destaque', sup1['nome'] in supf and '1º SUPERVISOR' in supf and f"{sup1['pct']:.1f}".replace('.', ',') in supf, sup1['nome'])
+    ok('Santuário: promotor líder continua em destaque', oficial['q4']['prom'][0]['nome'] in pg.inner_text('#leaderFeature'))
+    pg.locator('#page-home .split').screenshot(path=str(PRINTS / '18_santuario_destaques.png'))
+    pg.click('.sidebar .nav-btn[data-page="collection"]'); pg.wait_for_timeout(300)
+    ok('Carta mostra a patente e os meses de casa', 'de casa' in pg.inner_text('#collectionCards .player-card >> nth=0'))
+    for nome, faixa in [('Novato', (0, 3)), ('Escudeiro', (3, 6)), ('Desbravador', (6, 9)), ('Mestre', (9, 12))]:
+        pg.select_option('#casaFilter', nome); pg.wait_for_timeout(150)
+        esperado = sum(1 for k, v in tcasa.items() if faixa[0] <= v['meses'] < faixa[1])
+        ok(f'Filtro tempo de casa: {nome}', pg.locator('#collectionCards .player-card').count() == esperado, str(esperado))
+    pg.select_option('#casaFilter', 'pend'); pg.wait_for_timeout(150)
+    ok('Sem tempo de casa no banco: pendente (Willian Molulo)', pg.locator('#collectionCards .player-card').count() == 1 and 'Molulo' in pg.inner_text('#collectionCards'))
+    pg.locator('#collectionCards .player-card').first.click(); pg.wait_for_timeout(300)
+    ok('Ficha sem tempo de casa mostra PENDENTE', 'Tempo de casa pendente' in pg.inner_text('#modalBody') and 'PENDENTE' in pg.inner_text('#modalBody'))
+    pg.keyboard.press('Escape'); pg.select_option('#casaFilter', 'all'); pg.wait_for_timeout(150)
+    pos_casa = pg.evaluate("()=>MESES.q4.prom.map(r=>r.pos+':'+power({...r,kind:'prom'})).join()")
+    pg.select_option('#sortCards', 'casa'); pg.wait_for_timeout(200)
+    ok('Ordenar por tempo de casa não muda posição nem PWR', pg.evaluate("()=>MESES.q4.prom.map(r=>r.pos+':'+power({...r,kind:'prom'})).join()") == pos_casa)
+    pg.select_option('#sortCards', 'pos')
+
+
+    # ---------- modo escuro e fundo animado (24/10) ----------
+    pg.goto(V2.as_uri()); pg.wait_for_timeout(500)
+    ok('Tema padrão = claro', pg.evaluate('document.documentElement.dataset.tema') == 'claro' and 'Modo escuro' in pg.inner_text('#temaBtn'))
+    pg.click('#temaBtn'); pg.wait_for_timeout(200)
+    fundo = pg.evaluate("getComputedStyle(document.querySelector('.panel')).backgroundColor")
+    ok('Botão liga o modo escuro (painéis escuros)', pg.evaluate('document.documentElement.dataset.tema') == 'escuro' and fundo == 'rgb(30, 26, 40)', fundo)
+    pg.reload(); pg.wait_for_timeout(500)
+    ok('Modo escuro fica salvo ao recarregar', pg.evaluate('document.documentElement.dataset.tema') == 'escuro' and 'Modo claro' in pg.inner_text('#temaBtn'))
+    pg.click('#temaBtn'); pg.wait_for_timeout(200)
+    ok('Botão volta ao modo claro', pg.evaluate('document.documentElement.dataset.tema') == 'claro')
+    ok('Fundo animado ativo (estrelas e partículas)', pg.evaluate("getComputedStyle(document.querySelector('.ambient')).display") != 'none' and pg.evaluate("parseFloat(document.getElementById('particles').style.opacity)") >= .5)
+    lg = pg.evaluate("()=>{const [a,b]=[...document.querySelectorAll('.hero-logos .logo-chip')].map(c=>c.getBoundingClientRect());return [a.width,a.height,b.width,b.height]}")
+    ok('Logos SPOT e Reckitt com o mesmo selo', lg[0] == lg[2] and lg[1] == lg[3], str(lg))
 
 
     # celular

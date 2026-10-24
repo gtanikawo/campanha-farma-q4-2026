@@ -1,0 +1,378 @@
+{
+ "corte": "2026-10-22",
+ "fonte": "bi_d_pessoa.DTA_ADMISSAO (meses de casa na data de corte)",
+ "pessoas": {
+  "prom::ailton cesar dos santos": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::aurea lea da silva de jesus": {
+   "meses": 10,
+   "origem": "codigo"
+  },
+  "prom::willian farias": {
+   "meses": 2,
+   "origem": "rota"
+  },
+  "prom::lilian carla rodrigues garcia": {
+   "meses": 10,
+   "origem": "codigo"
+  },
+  "prom::marcela cordeiro da silva": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::katiane dutra": {
+   "meses": 3,
+   "origem": "codigo"
+  },
+  "prom::rafael johan kohler": {
+   "meses": 2,
+   "origem": "codigo"
+  },
+  "prom::amanda de jesus alves ferreira": {
+   "meses": 10,
+   "origem": "codigo"
+  },
+  "prom::renato marcio duarte faro": {
+   "meses": 2,
+   "origem": "nome"
+  },
+  "prom::elisangela machado dos santos lima": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::antonio jordana albesa": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::fabio gotze": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::anderson luiz francisco": {
+   "meses": 1,
+   "origem": "codigo"
+  },
+  "prom::bruna speltri vilasanti": {
+   "meses": 8,
+   "origem": "codigo"
+  },
+  "prom::edna rodrigues sandri": {
+   "meses": 7,
+   "origem": "codigo"
+  },
+  "prom::claudio santos do rosario reis": {
+   "meses": 8,
+   "origem": "codigo"
+  },
+  "prom::anderson veiga batista": {
+   "meses": 7,
+   "origem": "codigo"
+  },
+  "prom::maria claudia alves paula": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::regina oliveira novais": {
+   "meses": 8,
+   "origem": "codigo"
+  },
+  "prom::ana claudia souza albuquerque lins": {
+   "meses": 2,
+   "origem": "codigo"
+  },
+  "prom::wellington da silva santos": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::elisabete aparecida buzzo pereira": {
+   "meses": 3,
+   "origem": "codigo"
+  },
+  "prom::tamiris cristina cordeiro gomes": {
+   "meses": 7,
+   "origem": "codigo"
+  },
+  "prom::willey ramon barroso guimaraes": {
+   "meses": 6,
+   "origem": "codigo"
+  },
+  "prom::regiane de andrade maciel moroni": {
+   "meses": 4,
+   "origem": "codigo"
+  },
+  "prom::gabriela carolina dutra marques": {
+   "meses": 6,
+   "origem": "codigo"
+  },
+  "prom::fabiana estevao da silva": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::andre henrique francisco da silva": {
+   "meses": 2,
+   "origem": "codigo"
+  },
+  "prom::graciela lopes da silva": {
+   "meses": 2,
+   "origem": "codigo"
+  },
+  "prom::kassia kalitta sodre harmel": {
+   "meses": 3,
+   "origem": "codigo"
+  },
+  "prom::alessandra de paula dos santos": {
+   "meses": 3,
+   "origem": "codigo"
+  },
+  "prom::jean hilton pereira da silva": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::richard da silva azambuja": {
+   "meses": 6,
+   "origem": "codigo"
+  },
+  "prom::fernando leite silva": {
+   "meses": 6,
+   "origem": "codigo"
+  },
+  "prom::anderson de mello alves": {
+   "meses": 9,
+   "origem": "codigo"
+  },
+  "prom::anny valeria ferreira da silva": {
+   "meses": 8,
+   "origem": "codigo"
+  },
+  "prom::igor alves monteiro": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::francielle elisama lima rodrigues": {
+   "meses": 4,
+   "origem": "codigo"
+  },
+  "prom::mateus gusmao da silva moreira": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::dimitri ferreira de paula e silva": {
+   "meses": 4,
+   "origem": "codigo"
+  },
+  "prom::samandra maria quadros": {
+   "meses": 7,
+   "origem": "codigo"
+  },
+  "prom::michell garcia do nascimento": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::fernanda garcia": {
+   "meses": 2,
+   "origem": "codigo"
+  },
+  "prom::igor augusto aleixo de almeida": {
+   "meses": 8,
+   "origem": "codigo"
+  },
+  "prom::pamela michelle ribeiro dos santos": {
+   "meses": 7,
+   "origem": "codigo"
+  },
+  "prom::mauricio de carvalho": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::marcele souza": {
+   "meses": 11,
+   "origem": "rota"
+  },
+  "prom::lucicleide da silva teixeira de morais": {
+   "meses": 7,
+   "origem": "codigo"
+  },
+  "prom::delly oliveira almeida": {
+   "meses": 2,
+   "origem": "codigo"
+  },
+  "prom::leandro jesus de lima ferreira": {
+   "meses": 8,
+   "origem": "codigo"
+  },
+  "prom::mirieli santana marins araujo": {
+   "meses": 5,
+   "origem": "codigo"
+  },
+  "prom::leandro reis vieira": {
+   "meses": 0,
+   "origem": "codigo"
+  },
+  "prom::marcos andre gomes vital": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::pablo gomes costa": {
+   "meses": 9,
+   "origem": "codigo"
+  },
+  "prom::ana maria alves da silva": {
+   "meses": 5,
+   "origem": "codigo"
+  },
+  "prom::jociane porto coco": {
+   "meses": 7,
+   "origem": "codigo"
+  },
+  "prom::deusdete maria caetano": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::gilmara soares ferreira cravo": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::thais aparecida de oliveira e silva": {
+   "meses": 7,
+   "origem": "codigo"
+  },
+  "prom::kayky couto da costa": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::gustavo henrique ribeiro souza": {
+   "meses": 8,
+   "origem": "codigo"
+  },
+  "prom::natalli moreira costa": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::allef rafael torres da costa": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::paula camargo borges": {
+   "meses": 6,
+   "origem": "codigo"
+  },
+  "prom::paula thais freiras": {
+   "meses": 9,
+   "origem": "rota"
+  },
+  "prom::cilene baia araujo": {
+   "meses": 4,
+   "origem": "codigo"
+  },
+  "prom::matheus felipe de souza": {
+   "meses": 10,
+   "origem": "codigo"
+  },
+  "prom::bruna pimentel fernandes santos": {
+   "meses": 8,
+   "origem": "codigo"
+  },
+  "prom::pedro henrique pinheiro baquette": {
+   "meses": 2,
+   "origem": "codigo"
+  },
+  "prom::fabiani dos santos e santos": {
+   "meses": 6,
+   "origem": "codigo"
+  },
+  "prom::brenda cristina de souza": {
+   "meses": 2,
+   "origem": "codigo"
+  },
+  "prom::vanessa luciana gomes de oliveira": {
+   "meses": 9,
+   "origem": "codigo"
+  },
+  "prom::karine teixeira gamarra": {
+   "meses": 5,
+   "origem": "codigo"
+  },
+  "prom::bruna daiane da rosa": {
+   "meses": 8,
+   "origem": "codigo"
+  },
+  "prom::jassey rodrigues faustino": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::daniele de almeida barbosa": {
+   "meses": 7,
+   "origem": "codigo"
+  },
+  "prom::maria rosiane de freitas pereira fernand": {
+   "meses": 6,
+   "origem": "codigo"
+  },
+  "prom::natasha cristina hofman": {
+   "meses": 6,
+   "origem": "codigo"
+  },
+  "prom::ruthielen torma giglio": {
+   "meses": 7,
+   "origem": "codigo"
+  },
+  "prom::marilia gabriel lima": {
+   "meses": 4,
+   "origem": "codigo"
+  },
+  "prom::wagner nascimento da silva": {
+   "meses": 11,
+   "origem": "codigo"
+  },
+  "prom::karina brasileiro arruda": {
+   "meses": 4,
+   "origem": "codigo"
+  },
+  "prom::barbara almeida soares falconi": {
+   "meses": 8,
+   "origem": "codigo"
+  },
+  "prom::andreia domenique beloni santana": {
+   "meses": 9,
+   "origem": "codigo"
+  },
+  "prom::thais smanioto dos santos": {
+   "meses": 8,
+   "origem": "codigo"
+  },
+  "prom::ingrid cristine santana bogarin": {
+   "meses": 0,
+   "origem": "codigo"
+  },
+  "prom::diva emanoela borges salazar": {
+   "meses": 5,
+   "origem": "codigo"
+  },
+  "prom::gislaine aparecida sagas": {
+   "meses": 8,
+   "origem": "codigo"
+  },
+  "sup::andressa cabral de oliveira": {
+   "meses": 11,
+   "origem": "nome"
+  },
+  "sup::catarina fidelis da silva": {
+   "meses": 3,
+   "origem": "nome"
+  },
+  "sup::renata matos de sousa": {
+   "meses": 11,
+   "origem": "nome"
+  },
+  "sup::adriele dos santos caxias": {
+   "meses": 11,
+   "origem": "nome"
+  },
+  "sup::thiago resende de oliveira": {
+   "meses": 11,
+   "origem": "nome"
+  }
+ }
+}

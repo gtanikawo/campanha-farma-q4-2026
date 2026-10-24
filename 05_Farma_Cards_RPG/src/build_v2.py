@@ -175,7 +175,7 @@ for velho, novo in [
     ("color:'#ff77b8'", "color:'#FF1B83'"), ("color:'#72e9df'", "color:'#0F8F86'"), ("color:'#ffcb70'", "color:'#C08A12'"),
     ("title:'Ascensão épica',color:'#c0a0ff'", "title:'Ascensão épica',color:'#7B4FD6'"),
     ("title:'A porta Mítica',color:'#ff71b5'", "title:'A porta Mítica',color:'#D3006A'"), ("color:'#7f92ff'", "color:'#5B6BD6'"),
-    ("'255,130,190':'185,170,255'", "'255,27,131':'140,29,90'"), ('opacity:.48', 'opacity:.3'),
+    ("'255,130,190':'185,170,255'", "'255,27,131':'140,29,90'"), ('opacity:.48', 'opacity:.55'),
 ]:
     troca(velho, novo)
 
@@ -231,6 +231,26 @@ troca('<div id="toast" class="toast" role="status" aria-live="polite">',
       '<div id="importModal" class="modal" hidden><div class="modal-box"><div class="modal-head"><h2>Prévia da importação</h2><button class="xbtn" data-close="importModal" aria-label="Fechar">×</button></div><div id="importBody"></div>'
       '<div class="detail-actions"><button class="btn primary" id="importConfirm">Confirmar importação</button><button class="btn" id="importCancel">Cancelar</button></div></div></div>'
       '<div id="toast" class="toast" role="status" aria-live="polite">')
+
+# 15. Tempo de casa (patente) e supervisor Top 1 no Santuário (pedidos do Gustavo, 24/10)
+tc = AQUI / 'dados' / 'tempo_casa.json'
+tempo_casa = json.loads(tc.read_text(encoding='utf-8')) if tc.exists() else {'pessoas': {}}
+troca('\nlet MESES = clone(BASE_DATA);', '\nconst TEMPO_CASA = ' + json.dumps(tempo_casa, ensure_ascii=False) + ';\nlet MESES = clone(BASE_DATA);')
+troca('<div class="card-title">${esc(role)}</div>', '<div class="card-title">${esc(role)}</div>${casaLinha(r)}')
+troca('<div id="leaderFeature"></div></div>', '<div id="leaderFeature"></div></div><div class="panel sup-panel"><div class="panel-head"><h3>♛ Comandante em destaque</h3><span>1º supervisor do placar oficial</span></div><div id="supFeature"></div></div></div><div class="split-quick">')
+troca("function refreshApp(){", "function refreshApp(){try{renderSupFeature()}catch(e){console.error(e)};")
+troca('<select id="ufFilter" class="control"><option value="all">Todas as UFs</option></select>', '<select id="ufFilter" class="control"><option value="all">Todas as UFs</option></select><select id="casaFilter" class="control" aria-label="Tempo de casa"><option value="all">Todo tempo de casa</option><option value="Novato">Novato (até 3m)</option><option value="Escudeiro">Escudeiro (3–6m)</option><option value="Desbravador">Desbravador (6–9m)</option><option value="Mestre">Mestre (9–12m)</option><option value="Ancião">Ancião (12m+)</option><option value="pend">Tempo de casa pendente</option></select>')
+troca("if(uf!=='all'&&(r.kind!=='prom'||r.uf!==uf))return false;", "if(uf!=='all'&&(r.kind!=='prom'||r.uf!==uf))return false;if(!casaOk(r))return false;")
+troca('<option value="name">Ordenar: nome</option>', '<option value="casa">Ordenar: tempo de casa</option><option value="name">Ordenar: nome</option>')
+troca("sort==='name'?a.nome.localeCompare(b.nome,'pt-BR'):a.pos-b.pos", "sort==='casa'?(mesesCasa(b)??-1)-(mesesCasa(a)??-1):sort==='name'?a.nome.localeCompare(b.nome,'pt-BR'):a.pos-b.pos")
+troca("['searchCards','roleFilter','rarityFilter','supervisorFilter','ufFilter','sortCards']", "['searchCards','roleFilter','rarityFilter','supervisorFilter','ufFilter','casaFilter','sortCards']")
+
+# 16. Botão do modo escuro no topo (pedido do Gustavo, 24/10)
+troca('<div class="actions"><button class="btn" id="openPackTop">', '<div class="actions"><button class="btn tema-btn" id="temaBtn" type="button" aria-pressed="false">☾ Modo escuro</button><button class="btn" id="openPackTop">')
+
+# 17. Barra lateral sem o quadro "Temporada ativa" e sem o botão "Atualizar dados" (a importação fica no topo) (24/10)
+troca('<div class="side-bottom"><div class="season-chip"><small>TEMPORADA ATIVA</small><b>Q4 · 2026</b><span>Outubro → Novembro → Dezembro<br>Uma coleção em evolução.</span></div><button class="btn subtle" id="sideImport" title="Importar placar atualizado">⇧ Atualizar dados</button></div>', '')
+troca("$('sideImport').addEventListener('click',()=>$('importFile').click());", '')
 
 if falhas:
     print('FALHAS:'); [print(' -', f) for f in falhas]; sys.exit(1)

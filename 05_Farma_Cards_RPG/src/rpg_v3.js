@@ -111,6 +111,7 @@ function openCard(id){
       <h3>${esc(r.nome)}</h3>
       <div class="sup-line">${kind==='prom'?`Supervisor ${esc(r.supFull||r.sup||'—')} · ${esc(r.uf||'UF não informada')}`:`${number(r.prom)} promotores no time`} · posição oficial <b>${r.pos}º</b> ${lb('of')} · ${esc(periodo)}</div>
       ${subiu ? `<div class="levelup">✦ Subiu para o nível ${ultimo[ultimo.length-1].nivel} em ${monthLabel(ultimo[ultimo.length-1].k).toLowerCase()}</div>` : ''}
+      <div class="casa-line">⌛ ${(() => { const pt = patente(r); return pt ? `<b>${esc(pt.nome)}</b> · ${textoCasa(pt.meses)}` : '<b>Tempo de casa pendente</b> (não encontrado no cadastro)'; })()} ${lb(patente(r)?'of':'pend')} <small>patente pelo tempo de casa; não entra no PWR nem no ranking</small></div>
       <div class="detail-section-title">Desempenho ${lb('of')}</div>
       <div class="detail-attributes"><div class="attribute"><span>% LOJAS EXECUTADAS</span><b style="color:${t.color}">${pct(r.pct)}</b></div><div class="attribute"><span>LOJAS EXECUTADAS / PREVISTAS</span><b>${number(r.exec)} / ${number(r.lojas)}</b></div>
         <div class="attribute"><span>% VISITAS CUMPRIDAS (desempate)</span><b>${pct(r.pctv)}</b></div><div class="attribute"><span>ELEGIBILIDADE Q4</span><b><span class="eleg ${el.st}">${el.txt}</span></b><small>${esc(el.just)}</small></div></div>
@@ -271,9 +272,43 @@ function confirmarImport(){
 
 /* --- ligação dos controles novos --- */
 function initV3(){
+  initTema();
   setupPeriodo();
   document.querySelectorAll('#duelModes button').forEach(b => b.addEventListener('click', () => { duelMode = b.dataset.mode; document.querySelectorAll('#duelModes button').forEach(x => x.classList.toggle('active', x===b)); fillDuelSelects(); renderDuel(); }));
   $('importConfirm').addEventListener('click', confirmarImport);
   $('importCancel').addEventListener('click', () => { $('importModal').hidden = true; importPend = null; });
   refreshApp();
+}
+
+/* --- tempo de casa (patente na guilda): dado do banco, NÃO entra no PWR nem no ranking --- */
+const PATENTES = [[0,'Novato'],[3,'Escudeiro'],[6,'Desbravador'],[9,'Mestre'],[12,'Ancião']];
+function mesesCasa(r){ const t = (typeof TEMPO_CASA !== 'undefined' && TEMPO_CASA.pessoas) ? TEMPO_CASA.pessoas[identity(r)] : null; return t ? t.meses : null }
+function patente(r){ const m = mesesCasa(r); if (m == null) return null; let p = PATENTES[0]; for (const x of PATENTES) if (m >= x[0]) p = x; return {nome:p[1], min:p[0], meses:m} }
+function textoCasa(m){ if (m == null) return 'tempo de casa pendente'; if (m < 1) return 'menos de 1 mês de casa'; const a = Math.floor(m/12), r = m % 12; return (a ? `${a} ano${a>1?'s':''}${r?' e ':''}` : '') + (r ? `${r} ${r>1?'meses':'mês'}` : '') + ' de casa' }
+function casaLinha(r){ const p = patente(r); return `<div class="card-casa">⌛ ${p ? `${esc(p.nome)} · ${p.meses}m de casa` : 'tempo de casa pendente'}</div>` }
+function casaOk(r){ const f = $('casaFilter'); if (!f || f.value === 'all') return true; const p = patente(r); return f.value === 'pend' ? !p : (p && p.nome === f.value) }
+
+/* --- Santuário: comandante (supervisor Top 1) em destaque --- */
+function renderSupFeature(){
+  const el = $('supFeature'); if (!el) return;
+  const s = (data().sup || [])[0];
+  if (!s){ el.innerHTML = '<div class="empty-state">Sem supervisores no período.</div>'; return; }
+  const r = {...s, kind:'sup'}, p = patente(r), time = (data().prom || []).filter(x => x.supFull === s.nome);
+  el.innerHTML = `<div class="leader-zone"><div class="leader-card-mini">${cardHTML(r, 'sup', true)}</div><div class="leader-copy">
+    <div class="rank">♛ 1º SUPERVISOR · ${esc(data().label)} ${lb('of')}</div><h3>${esc(s.nome)}</h3>
+    <p>${number(s.prom)} promotores no time · ${p ? `${esc(p.nome)} · ${textoCasa(p.meses)}` : 'tempo de casa pendente'}</p>
+    <div class="big-score">${pct(s.pct)} <small>DAS LOJAS DO TIME EXECUTADAS</small></div>
+    <p style="margin-top:6px">${number(s.exec)} de ${number(s.lojas)} lojas do time (soma das lojas de todos os promotores, não média dos %).${time[0] ? ` Melhor do time: ${esc(time[0].nome)} (${pct(time[0].pct)}).` : ''}</p>
+    <button class="btn" style="margin-top:12px" data-open-card="${esc(identity(r))}">Inspecionar carta ↗</button></div></div>`;
+}
+
+/* --- modo escuro: botão no topo; a escolha fica só neste navegador; padrão = claro --- */
+function aplicarTema(t){
+  document.documentElement.dataset.tema = t;
+  const b = $('temaBtn'); if (b){ b.textContent = t === 'escuro' ? '☀ Modo claro' : '☾ Modo escuro'; b.setAttribute('aria-pressed', String(t === 'escuro')); }
+}
+function initTema(){
+  let t = 'claro'; try { t = localStorage.getItem('farmaCards.tema') || 'claro' } catch {}
+  aplicarTema(t);
+  $('temaBtn').addEventListener('click', () => { const novo = document.documentElement.dataset.tema === 'escuro' ? 'claro' : 'escuro'; aplicarTema(novo); try { localStorage.setItem('farmaCards.tema', novo) } catch {} });
 }
