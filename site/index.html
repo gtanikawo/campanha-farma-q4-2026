@@ -982,7 +982,7 @@ function renderSupFeature(){
   if (!s){ el.innerHTML = '<div class="empty-state">Sem supervisores no período.</div>'; return; }
   const r = {...s, kind:'sup'}, p = patente(r), time = (data().prom || []).filter(x => x.supFull === s.nome);
   el.innerHTML = `<div class="leader-zone"><div class="leader-card-mini">${cardHTML(r, 'sup', true)}</div><div class="leader-copy">
-    <div class="rank">♛ 1º SUPERVISOR · ${esc(data().label)} ${lb('of')}</div><h3>${esc(s.nome)}</h3>
+    <div class="rank">♛ 1º SUPERVISOR · ${esc(data().label)}</div><h3>${esc(s.nome)}</h3>
     <p>${number(s.prom)} promotores no time · ${p ? `${esc(p.nome)} · ${textoCasa(p.meses)}` : 'tempo de casa pendente'}</p>
     <div class="big-score">${pct(s.pct)} <small>DAS LOJAS DO TIME EXECUTADAS</small></div>
     <p style="margin-top:6px">${number(s.exec)} de ${number(s.lojas)} lojas do time (soma das lojas de todos os promotores, não média dos %).${time[0] ? ` Melhor do time: ${esc(time[0].nome)} (${pct(time[0].pct)}).` : ''}</p>
