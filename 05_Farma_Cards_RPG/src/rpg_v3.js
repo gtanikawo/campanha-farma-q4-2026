@@ -99,8 +99,7 @@ function openCard(id){
   const r = findRowById(id); if (!r) return; activeDetail = id;
   const t = tier(r), kind = r.kind || 'prom', el = elegibilidade(r), rx = raridadeExplicada(r), hist = historico(r), ms = missoesDe(r);
   const xpV = xp(r), lvl = level(r), falta = lvl >= NIVEL_MAX ? 0 : XP_NIVEL - (xpV % XP_NIVEL), tr = trilhaDe(r);
-  const E = getNPScore(r)||0, D = Number(r.pctv)||0, V = volumeIndex(r);
-  const comp = [['Execução', E, .70, '% lojas executadas'], ['Disciplina', D, .20, '% visitas cumpridas'], ['Volume', V, .10, `lojas executadas ÷ 50 (máx. 100)`]];
+  const comp = [['Nota oficial', getNota(r)||0, .90, '50% lojas + 50% frequência'], ['Volume', volumeIndex(r), .10, `lojas executadas ÷ 50 (máx. 100)`]];
   const periodo = activeKey==='q4' ? 'Q4 acumulado · ' + (data().fechado ? 'trimestre fechado' : 'parcial até ' + corteBR('q4')) : monthLabel(activeKey) + ' · ' + (mesFechado(activeKey) ? 'mês fechado' : 'parcial até ' + corteBR(activeKey));
   const ultimo = hist.filter(h => h.carregado && h.nivel != null), subiu = ultimo.length > 1 && ultimo[ultimo.length-1].nivel > ultimo[ultimo.length-2].nivel;
   const novas = ms.filter(m => m.feito && m.ato === Math.max(...ATOS.filter(a => atoAberto(a.num)).map(a => a.num), 0));
@@ -174,7 +173,7 @@ function renderDuel(){
   const a = findRowById($('fighterA').value), b = findRowById($('fighterB').value);
   if (!a || !b){ $('duelResult').innerHTML = '<div class="empty-state">Escolha dois participantes para iniciar o confronto.</div>'; return; }
   if (identity(a)===identity(b)){ $('duelResult').innerHTML = '<div class="empty-state">Escolha dois participantes diferentes.</div>'; return; }
-  const at = r => [['Execução', getNPScore(r)||0, .70], ['Disciplina', Number(r.pctv)||0, .20], ['Volume', volumeIndex(r), .10]];
+  const at = r => [['Nota oficial', getNota(r)||0, .90], ['Volume', volumeIndex(r), .10]];
   const A = at(a), B = at(b), pa = power(a), pb = power(b);
   const vant = A.map((x,i) => ({n:x[0], a:x[1], b:B[i][1], w:x[2], cont:(x[1]-B[i][1])*x[2]}));
   const venc = pa===pb ? null : pa>pb ? a : b, perd = venc===a ? b : a;

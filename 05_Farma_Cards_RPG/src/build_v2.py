@@ -74,7 +74,7 @@ for velho, novo in [
     ('Ranking oficial: ${r.pos}º · NP ${pct(r.pct)}', 'Ranking oficial: ${r.pos}º · ${pct(r.pct)} das lojas executadas'),
     ('posição ${r.pos} · NP ${pct(r.pct)}', 'posição ${r.pos} · ${pct(r.pct)} das lojas executadas'),
     ('NP · LOJAS EXECUTADAS', '% LOJAS EXECUTADAS'),
-    ('percentual de lojas executadas do placar (NP).<br>• Poder de jogo (PWR) = 70% NP + 20%', 'percentual de lojas executadas do placar oficial.<br>• Poder de jogo (PWR) = 70% lojas executadas + 20%'),
+    ('percentual de lojas executadas do placar (NP).<br>• Poder de jogo (PWR) = 70% NP + 20% visitas cumpridas + 10% índice de volume (até 50 lojas executadas).', 'percentual de lojas executadas do placar oficial.<br>• Poder de jogo (PWR) = 90% nota oficial + 10% índice de volume (até 50 lojas executadas).'),
     ('`${myth} cartas na faixa mítica de NP`', "`${myth} ${myth===1?'carta':'cartas'} na faixa Mítica`"),
     ("${esc(d.periodo?stripHTML(d.periodo):'')} ${loaded<3", "${esc(d.periodo?stripHTML(d.periodo):'')}. ${loaded<3"),
     ('Configure as faixas de NP que definem as raridades e as condições adicionais necessárias para liberar o efeito máximo. As configurações ficam salvas neste navegador.',
@@ -181,6 +181,9 @@ for velho, novo in [
 
 # 10. Missões & selos em 3 atos (src/missoes.js) + trilha de recompensas
 missoes_js = (AQUI / 'missoes.js').read_text(encoding='utf-8')
+# PWR alinhado à nota oficial (26/10): 90% nota + 10% volume
+troca("function power(r){return Math.round(((getNPScore(r)??0)*.7+Number(r.pctv||0)*.2+volumeIndex(r)*.1)*10)/10}",
+      "function power(r){return Math.round((getNota(r)*.9+volumeIndex(r)*.1)*10)/10}")
 troca("function xp(r){return Math.round(power(r)*power(r)/100*25)}",
       "function xpBase(r){return Math.round(power(r)*power(r)/100*25)}\nfunction xp(r){return xpBase(r)+missionXP(r)}")
 troca("function level(r){return Math.max(1,Math.min(20,1+Math.floor(xp(r)/150)))}",

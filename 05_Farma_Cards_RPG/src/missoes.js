@@ -87,7 +87,7 @@ function renderForgeRules(){
  const somaAto=n=>number(MISSOES.filter(m=>m.ato===n).reduce((s,m)=>s+m.xp,0));
  const formulas=`<div class="formula">
   <b>Índice de volume</b> = mín(100; lojas executadas ÷ 50 × 100).<br>
-  <b>PWR (poder de jogo)</b> = 70% × % lojas executadas + 20% × % visitas cumpridas + 10% × índice de volume.<br>
+  <b>PWR (poder de jogo)</b> = 90% × nota oficial + 10% × índice de volume. Segue a mesma ordem do ranking; o volume é só um pequeno bônus.<br>
   <b>XP base</b> = arredondar(PWR × PWR ÷ 100 × 25).<br>
   <b>XP total</b> = XP base + XP das missões conquistadas (Ato I até ${somaAto(1)} · Ato II até ${somaAto(2)} · Ato III até ${somaAto(3)}).<br>
   <b>Nível</b> = 1 + a cada ${XP_NIVEL} XP, até o nível ${NIVEL_MAX}.<br>

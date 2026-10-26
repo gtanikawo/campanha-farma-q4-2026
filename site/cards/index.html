@@ -486,7 +486,7 @@ html[data-tema="escuro"] .modal{background:#05030Acc}
 
   <section id="page-forge" class="page">
     <div class="page-title"><div><div class="eyebrow">Regras da coleção</div><h1>Forja de raridade</h1><p>Estas são as regras de raridade da campanha. Valem igual para todo mundo e só mudam numa nova versão do arquivo.</p></div></div>
-    <div class="forge-grid"><div class="panel"><div class="panel-head"><h3>⚒ Faixas de raridade</h3><span>% de lojas executadas</span></div><div id="rarityInputs"></div></div><div class="panel"><div class="panel-head"><h3>✧ Requisitos de raridade máxima</h3><span>Efeitos e selos</span></div><div id="gatingInputs"></div><div class="formula"><strong>Como o sistema é calculado</strong><br>• Raridade base = percentual de lojas executadas do placar oficial.<br>• Poder de jogo (PWR) = 70% lojas executadas + 20% frequência + 10% índice de volume (até 50 lojas executadas).<br>• Efeitos especiais requerem sinais adicionais, como disciplina de visitas e volume mínimo.<br>• XP = XP base do PWR + XP das missões conquistadas; nível sobe a cada 250 XP (até 30).<br>• PWR, nível, XP, selos e raridade nunca alteram o ranking oficial.</div></div></div>
+    <div class="forge-grid"><div class="panel"><div class="panel-head"><h3>⚒ Faixas de raridade</h3><span>% de lojas executadas</span></div><div id="rarityInputs"></div></div><div class="panel"><div class="panel-head"><h3>✧ Requisitos de raridade máxima</h3><span>Efeitos e selos</span></div><div id="gatingInputs"></div><div class="formula"><strong>Como o sistema é calculado</strong><br>• Raridade base = percentual de lojas executadas do placar oficial.<br>• Poder de jogo (PWR) = 90% nota oficial + 10% índice de volume (até 50 lojas executadas).<br>• Efeitos especiais requerem sinais adicionais, como disciplina de visitas e volume mínimo.<br>• XP = XP base do PWR + XP das missões conquistadas; nível sobe a cada 250 XP (até 30).<br>• PWR, nível, XP, selos e raridade nunca alteram o ranking oficial.</div></div></div>
     <div id="forgeRules" class="forge-rules"></div><div class="notice"><strong>Importante:</strong> no arquivo parcial de outubro, os atributos de visitas e lojas executadas servem como reforço visual. Selos de constância trimestral e campeões definitivos permanecem bloqueados até importar os dados mensais restantes.</div>
   </section>
   
@@ -543,7 +543,7 @@ function identity(r){return (r.kind||'prom')+'::'+norm(r.nome)}
 function uniquePeople(){const out=new Map();['q4','out','nov','dez'].forEach(k=>{if(!hasMonth(k))return;allRows(k).forEach(r=>{const id=identity(r);if(!out.has(id))out.set(id,r)})});return [...out.values()]}
 function maxExec(){const vals=allRows().map(r=>Number(r.exec)||0);return Math.max(50,...vals)}
 function volumeIndex(r){return Math.min(100,(Number(r.exec||0)/50)*100)}
-function power(r){return Math.round(((getNPScore(r)??0)*.7+Number(r.pctv||0)*.2+volumeIndex(r)*.1)*10)/10}
+function power(r){return Math.round((getNota(r)*.9+volumeIndex(r)*.1)*10)/10}
 function xpBase(r){return Math.round(power(r)*power(r)/100*25)}
 function xp(r){return xpBase(r)+missionXP(r)}
 function level(r){return Math.max(1,Math.min(NIVEL_MAX,1+Math.floor(xp(r)/XP_NIVEL)))}
@@ -665,7 +665,7 @@ function renderForgeRules(){
  const somaAto=n=>number(MISSOES.filter(m=>m.ato===n).reduce((s,m)=>s+m.xp,0));
  const formulas=`<div class="formula">
   <b>Índice de volume</b> = mín(100; lojas executadas ÷ 50 × 100).<br>
-  <b>PWR (poder de jogo)</b> = 70% × % lojas executadas + 20% × % frequência + 10% × índice de volume.<br>
+  <b>PWR (poder de jogo)</b> = 90% × nota oficial + 10% × índice de volume. Segue a mesma ordem do ranking; o volume é só um pequeno bônus.<br>
   <b>XP base</b> = arredondar(PWR × PWR ÷ 100 × 25).<br>
   <b>XP total</b> = XP base + XP das missões conquistadas (Ato I até ${somaAto(1)} · Ato II até ${somaAto(2)} · Ato III até ${somaAto(3)}).<br>
   <b>Nível</b> = 1 + a cada ${XP_NIVEL} XP, até o nível ${NIVEL_MAX}.<br>
@@ -786,8 +786,7 @@ function openCard(id){
   const r = findRowById(id); if (!r) return; activeDetail = id;
   const t = tier(r), kind = r.kind || 'prom', el = elegibilidade(r), rx = raridadeExplicada(r), hist = historico(r), ms = missoesDe(r);
   const xpV = xp(r), lvl = level(r), falta = lvl >= NIVEL_MAX ? 0 : XP_NIVEL - (xpV % XP_NIVEL), tr = trilhaDe(r);
-  const E = getNPScore(r)||0, D = Number(r.pctv)||0, V = volumeIndex(r);
-  const comp = [['Execução', E, .70, '% lojas executadas'], ['Disciplina', D, .20, '% frequência'], ['Volume', V, .10, `lojas executadas ÷ 50 (máx. 100)`]];
+  const comp = [['Nota oficial', getNota(r)||0, .90, '50% lojas + 50% frequência'], ['Volume', volumeIndex(r), .10, `lojas executadas ÷ 50 (máx. 100)`]];
   const periodo = activeKey==='q4' ? 'Q4 acumulado · ' + (data().fechado ? 'trimestre fechado' : 'parcial até ' + corteBR('q4')) : monthLabel(activeKey) + ' · ' + (mesFechado(activeKey) ? 'mês fechado' : 'parcial até ' + corteBR(activeKey));
   const ultimo = hist.filter(h => h.carregado && h.nivel != null), subiu = ultimo.length > 1 && ultimo[ultimo.length-1].nivel > ultimo[ultimo.length-2].nivel;
   const novas = ms.filter(m => m.feito && m.ato === Math.max(...ATOS.filter(a => atoAberto(a.num)).map(a => a.num), 0));
@@ -861,7 +860,7 @@ function renderDuel(){
   const a = findRowById($('fighterA').value), b = findRowById($('fighterB').value);
   if (!a || !b){ $('duelResult').innerHTML = '<div class="empty-state">Escolha dois participantes para iniciar o confronto.</div>'; return; }
   if (identity(a)===identity(b)){ $('duelResult').innerHTML = '<div class="empty-state">Escolha dois participantes diferentes.</div>'; return; }
-  const at = r => [['Execução', getNPScore(r)||0, .70], ['Disciplina', Number(r.pctv)||0, .20], ['Volume', volumeIndex(r), .10]];
+  const at = r => [['Nota oficial', getNota(r)||0, .90], ['Volume', volumeIndex(r), .10]];
   const A = at(a), B = at(b), pa = power(a), pb = power(b);
   const vant = A.map((x,i) => ({n:x[0], a:x[1], b:B[i][1], w:x[2], cont:(x[1]-B[i][1])*x[2]}));
   const venc = pa===pb ? null : pa>pb ? a : b, perd = venc===a ? b : a;
