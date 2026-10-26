@@ -184,6 +184,7 @@ missoes_js = (AQUI / 'missoes.js').read_text(encoding='utf-8')
 # PWR = nota oficial (26/10): só percentuais, o tamanho do roteiro não dá vantagem
 troca("function power(r){return Math.round(((getNPScore(r)??0)*.7+Number(r.pctv||0)*.2+volumeIndex(r)*.1)*10)/10}",
       "function power(r){return Math.round(getNota(r)*10)/10}")
+troca('Efeitos especiais requerem sinais adicionais, como disciplina de visitas e volume mínimo.', 'A Holográfica exige também frequência mínima; nenhuma regra depende da quantidade de lojas do roteiro.')
 # sem classe por quantidade de lojas e sem mínimo de lojas na Holográfica
 troca("if(Number(r.exec)>=gates.volumeExec)return 'Cavaleiro do Volume';", '')
 troca("row('Holográfica: volume mínimo','lojas executadas no recorte',gates.mythicExec),", '')
