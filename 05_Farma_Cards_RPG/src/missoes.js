@@ -77,7 +77,7 @@ function renderForgeRules(){
   ['3º','Cavaleiro do Volume',`${gates.volumeExec} lojas executadas ou mais`],
   ['4º','Sentinela de Execução',`${thresholds.gold}% ou mais das lojas executadas (faixa Ouro)`],
   ['5º','Viajante da Rota','nenhuma das anteriores']]);
- const raridade=tab(['Raridade','Faixa de lojas executadas','Observação'],[
+ const raridade=tab(['Raridade','Faixa da nota oficial','Observação'],[
   ['Comum',`abaixo de ${thresholds.bronze}%`,''],['Bronze',`${thresholds.bronze}% a ${thresholds.silver-0.1}%`,''],['Prata',`${thresholds.silver}% a ${thresholds.gold-0.1}%`,''],
   ['Ouro',`${thresholds.gold}% a ${thresholds.epic-0.1}%`,''],['Épica',`${thresholds.epic}% a ${thresholds.mythic-0.1}%`,''],
   ['Mítica selada',`${thresholds.mythic}% ou mais`,'sem os requisitos extras: moldura Mítica, sem holografia'],
@@ -92,6 +92,6 @@ function renderForgeRules(){
   <b>XP total</b> = XP base + XP das missões conquistadas (Ato I até ${somaAto(1)} · Ato II até ${somaAto(2)} · Ato III até ${somaAto(3)}).<br>
   <b>Nível</b> = 1 + a cada ${XP_NIVEL} XP, até o nível ${NIVEL_MAX}.<br>
   <b>Atos:</b> cada ato abre quando o mês entra no placar (Ato III com dezembro e o acumulado do trimestre). Missão de ato aberto continua valendo nos meses seguintes.<br>
-  <b>Ranking oficial:</b> lojas executadas ÷ lojas do roteiro, desempate pelo % de visitas cumpridas. Raridade, classe, PWR, XP, nível, missões, selos, trilha e confronto <b>não</b> mudam posição, desempate nem premiação.</div>`;
- $('forgeRules').innerHTML=bloco('◇ Raridade completa','% de lojas executadas',raridade)+bloco('♜ Classes da carta','decididas nesta ordem',classes)+bloco('✧ Missões e selos','15 missões em 3 atos',missoes)+bloco('♛ Trilha de recompensas','XP das missões',trilha)+bloco('⚙ Fórmulas do jogo','como cada número é calculado',formulas)+(typeof PATENTES!=='undefined'?bloco('⌛ Patente na guilda','tempo de casa (cadastro)',tab(['Patente','Tempo de casa','Efeito'],PATENTES.map((p,i)=>[p[1],PATENTES[i+1]?`${p[0]} a ${PATENTES[i+1][0]-1} meses`:`${p[0]} meses ou mais`,'Título na carta e filtro da coleção. Não entra no PWR, no XP nem no ranking.']))):'');
+  <b>Ranking oficial:</b> nota = 50% × % lojas executadas + 50% × % frequência (visitas feitas ÷ visitas já cobradas até o corte); desempate % lojas → % frequência → % NewsPage realizado. Raridade, classe, PWR, XP, nível, missões, selos, trilha e confronto <b>não</b> mudam posição, desempate nem premiação.</div>`;
+ $('forgeRules').innerHTML=bloco('◇ Raridade completa','nota oficial',raridade)+bloco('♜ Classes da carta','decididas nesta ordem',classes)+bloco('✧ Missões e selos','15 missões em 3 atos',missoes)+bloco('♛ Trilha de recompensas','XP das missões',trilha)+bloco('⚙ Fórmulas do jogo','como cada número é calculado',formulas)+(typeof PATENTES!=='undefined'?bloco('⌛ Patente na guilda','tempo de casa (cadastro)',tab(['Patente','Tempo de casa','Efeito'],PATENTES.map((p,i)=>[p[1],PATENTES[i+1]?`${p[0]} a ${PATENTES[i+1][0]-1} meses`:`${p[0]} meses ou mais`,'Título na carta e filtro da coleção. Não entra no PWR, no XP nem no ranking.']))):'');
 }

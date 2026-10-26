@@ -14,3 +14,8 @@ __pycache__/
 ~$*
 desktop.ini
 .vercel
+
+# versão de validação da nota (lojas + frequência) e backups locais
+03_HTML/src/_backup/
+03_HTML/*VALIDACAO*.html
+05_Farma_Cards_RPG/src/_backup/

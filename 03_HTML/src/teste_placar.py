@@ -53,7 +53,9 @@ with sync_playwright() as p:
     ok('Soma dos promotores = total geral', sum(r['lojas'] for r in V['q4']['prom']) == t['lojas'] and sum(r['exec'] for r in V['q4']['prom']) == t['exec'])
     ok('Soma dos supervisores = total geral', sum(r['lojas'] for r in V['q4']['sup']) == t['lojas'] and sum(r['exec'] for r in V['q4']['sup']) == t['exec'])
     ok('% = exec ÷ lojas em todas as linhas', all(abs(r['pct'] - round(r['exec'] / r['lojas'] * 100, 1)) < 1e-9 for r in V['q4']['prom'] + V['q4']['sup']))
-    ok('Ordem: % lojas e depois % visitas', all((a['px'], a['pvx']) >= (b_['px'], b_['pvx']) for a, b_ in zip(V['q4']['prom'], V['q4']['prom'][1:])))
+    ok('Ordem oficial: nota → % lojas → % frequência → % NewsPage', all((a['nota'], a['px'], a['pfx'], a['pnp']) >= (b_['nota'], b_['px'], b_['pfx'], b_['pnp']) for g in ['prom', 'sup'] for a, b_ in zip(V['q4'][g], V['q4'][g][1:])))
+    ok('Nota = 50% lojas + 50% frequência em todas as linhas', all(abs(r['nota'] - (r['px'] + r['pfx']) / 2) < 1e-12 for r in V['q4']['prom'] + V['q4']['sup']))
+    ok('Frequência só cobra visitas vencidas: geral entre 85% e 92% em 22/10', 85 <= sum(r['cump'] for r in V['q4']['prom']) / sum(r['den'] for r in V['q4']['prom']) * 100 <= 92)
     ok('Status: Q4 2026 — ACUMULADO PARCIAL ATÉ 22/10/2026', pg.inner_text('#statusQ4') == 'Q4 2026 — ACUMULADO PARCIAL ATÉ 22/10/2026')
     ok('Novembro e dezembro aguardando apuração (desabilitados)', pg.locator('#mesPills .pill[disabled]').count() == 2 and 'aguardando apuração' in pg.inner_text('#mesPills'))
     ok('Aviso de trimestre em andamento visível', pg.is_visible('#avisoDados'))
@@ -66,8 +68,13 @@ with sync_playwright() as p:
     me = pg.inner_text('#me')
     ok('Busca + simulação com aviso', pg.locator('#tbody-prom tr').count() == 1 and 'Simulação com a classificação atual' in me and 'Elegibilidade Q4: Pendente' in me)
     r = next(x for x in V['q4']['prom'] if x['nome'].startswith('Edna')); c = V['q4']['prom'][2]
-    n = next(i for i in range(1, 999) if (r['exec'] + i) * c['lojas'] > c['exec'] * r['lojas'])
-    ok('Simulação: nº de lojas = menor inteiro que passa o 3º (conta em inteiros)', f'mais {n} loja' in me, f'{n} lojas')
+    def n_nota(r, c):  # mesma conta da tela: cada loja pendente executada soma 1 loja e 1 visita (as já vencidas primeiro)
+        ex, f, den = r['exec'], r['cump'], r['den']
+        for n, v in enumerate(sorted(r['pend'], reverse=True), 1):
+            ex += 1; f += 1; den += (1 if v == 0 else 0)
+            if (ex / r['lojas'] + f / den) / 2 > c['nota']: return n
+    n = n_nota(r, c)
+    ok('Simulação pela nota: nº de lojas = menor que passa a nota do 3º', n and f'mais {n} loja' in me and 'nota' in me, f'{n} lojas')
     pg.fill('#busca-prom', ''); pg.select_option('#uf-prom', 'RS'); pg.wait_for_timeout(150)
     ok('Filtro UF', pg.locator('#tbody-prom tr').count() == sum(1 for x in V['q4']['prom'] if x['uf'] == 'RS'))
     pg.select_option('#uf-prom', ''); pg.click('#panel-prom th[data-key="pct"]'); pg.wait_for_timeout(150)

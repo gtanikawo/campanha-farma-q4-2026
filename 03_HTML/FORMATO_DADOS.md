@@ -8,9 +8,10 @@ O placar `Placar_Farma_Q4_2026_Ajustado.html` guarda, para cada mês, **uma linh
 |---|---|
 | Loja prevista | Loja do roteiro do mês com `COUNT_LOJA = 1` no Tracking. Loja abonada (Planejado Real = 0) fica fora. |
 | Loja executada | Loja prevista com pelo menos 1 pesquisa NewsPage no mês (`pesquisas > 0`). |
-| % lojas executadas | executadas ÷ previstas. **Q4 = soma das executadas ÷ soma das previstas dos meses apurados**, nunca média dos % mensais. |
-| Desempate | % visitas cumpridas = Σ mín(pesquisas, planejado) ÷ Σ planejado. |
-| Empate total | Não existe na base atual. Se acontecer, a ordem é alfabética. |
+| % lojas executadas | executadas ÷ previstas. No Q4, Σ executadas ÷ Σ previstas dos meses apurados (nunca a média dos % mensais). |
+| % frequência | Σ mín(pesquisas, planejado) ÷ Σ máx(visitas cobradas, visitas feitas). As visitas planejadas da loja dividem o mês em janelas iguais, e a visita k vence no dia ⌈k × dias do mês ÷ planejado⌉. **Mês aberto:** só cobra a visita cuja janela já fechou até o corte (mensal e bimestral: no fim do mês; quinzenal: na metade e no fim; semanal: uma por semana). A visita feita antes do prazo já conta. **Mês fechado:** cobra todo o planejado. |
+| **Nota (regra oficial desde 26/10/2026)** | **50% × % lojas executadas + 50% × % frequência**, para promotores e supervisores. No Q4, cada parte soma os totais dos meses apurados. |
+| Desempate | 1º % lojas executadas · 2º % frequência · 3º % NewsPage realizado (Σ pesquisas ÷ Σ planejado, sem limite) · por último o nome. |
 | Lojas repetidas | Mesma rota + mesma loja no mesmo mês conta 1 vez. A mesma loja conta de novo em outro mês. |
 | Vaga em aberto | Linha com "VAGA" no nome do colaborador fica fora dos rankings e dos totais. |
 | Supervisores | Ranking próprio, somando as lojas dos promotores do time em cada mês. Não se mistura com o de promotores. |

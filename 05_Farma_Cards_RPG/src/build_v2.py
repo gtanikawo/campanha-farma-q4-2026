@@ -252,6 +252,19 @@ troca('<div class="actions"><button class="btn" id="openPackTop">', '<div class=
 troca('<div class="side-bottom"><div class="season-chip"><small>TEMPORADA ATIVA</small><b>Q4 · 2026</b><span>Outubro → Novembro → Dezembro<br>Uma coleção em evolução.</span></div><button class="btn subtle" id="sideImport" title="Importar placar atualizado">⇧ Atualizar dados</button></div>', '')
 troca("$('sideImport').addEventListener('click',()=>$('importFile').click());", '')
 
+# 18. Nota oficial (26/10): carta, Santuário e regras pela nota; "visitas cumpridas" passa a "frequência"
+troca("row(`${n} a partir de`,'% de lojas executadas no recorte',thresholds[k]+'%')", "row(`${n} a partir de`,'nota oficial no recorte',thresholds[k]+'%')")
+troca('✦ Raridade pelo % de lojas executadas', '✦ Raridade pela nota oficial')
+troca('O % de lojas executadas define a faixa base.', 'A nota oficial define a faixa base.')
+troca('<small>% LOJAS EXEC.</small><strong>${pct(r.pct)}</strong>', '<small>NOTA</small><strong>${pct(getNota(r))}</strong>')
+troca('${pct(leader.pct)} <small>DAS LOJAS EXECUTADAS</small>', '${pct(getNota(leader))} <small>NOTA OFICIAL</small>')
+troca('lojas executadas de ${number(leader.lojas)} previstas no recorte atual.', 'lojas executadas de ${number(leader.lojas)} previstas · lojas ${pct(leader.pct)} · frequência ${pct(leader.pctv)}.')
+troca('O ranking oficial continua definido por lojas executadas ÷ lojas de roteiro, com % de visitas cumpridas como desempate.', 'O ranking oficial usa a nota = 50% lojas executadas + 50% frequência, com desempate por % lojas, % frequência e % NewsPage.')
+troca('<strong>Desempate:</strong> percentual de visitas cumpridas conforme o placar oficial.', '<strong>Nota:</strong> 50% lojas executadas + 50% frequência (visitas feitas ÷ visitas já cobradas até o corte). <strong>Desempate:</strong> % lojas, depois % frequência, depois % NewsPage realizado.')
+for velho, novo in [('% VISITAS CUMPRIDAS', '% FREQUÊNCIA'), ('VISITAS CUMPRIDAS', 'FREQUÊNCIA'), ('das visitas cumpridas', 'de frequência'), ('de visitas cumpridas', 'de frequência'),
+                    ('% visitas cumpridas', '% frequência'), ('visitas cumpridas', 'frequência'), ('Visitas cumpridas', 'Frequência')]:
+    h = h.replace(velho, novo)
+
 if falhas:
     print('FALHAS:'); [print(' -', f) for f in falhas]; sys.exit(1)
 SAIDA.write_text(h, encoding='utf-8')

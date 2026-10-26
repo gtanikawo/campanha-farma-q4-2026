@@ -8,6 +8,11 @@ const LB = {of:['OFICIAL','Resultado validado no placar'], rpg:['RPG','Atributo 
 const lb = k => `<span class="lb lb-${k}" title="${LB[k][1]}">${LB[k][0]}</span>`;
 const MESES_Q4 = ['out','nov','dez'];
 
+/* --- nota oficial (26/10): 50% lojas + 50% frequência; raridade e carta usam a nota --- */
+function getNota(r){ const v = Number(r && r.nota); return Number.isFinite(v) ? v : getNPScore(r) }
+function tier(r){ const v = getNota(r) ?? 0; let sel = RARITIES[0]; for (const it of RARITIES.slice(1)) if (v >= it.min()) sel = it; return sel }
+function mythicUnlocked(r){ return getNota(r) >= thresholds.mythic && Number(r.pctv) >= gates.mythicVisit && Number(r.exec) >= gates.mythicExec && proposalsOk(r) }
+
 /* --- meses: corte e fechado (vêm do placar) --- */
 function mesFechado(k){ return !!(MESES[k] && MESES[k].disponivel && MESES[k].fechado) }
 function corteBR(k){ const c = MESES[k] && MESES[k].corte; return c ? c.slice(8,10)+'/'+c.slice(5,7) : '' }
@@ -81,9 +86,9 @@ function extratoXP(r){
 
 /* --- raridade explicada --- */
 function raridadeExplicada(r){
-  const v = getNPScore(r), t = tier(r), idx = RARITIES.findIndex(x => x.id === t.id), prox = RARITIES[idx+1];
+  const v = getNota(r), t = tier(r), idx = RARITIES.findIndex(x => x.id === t.id), prox = RARITIES[idx+1];
   const req = [
-    [`${thresholds.mythic}%+ das lojas executadas`, v >= thresholds.mythic, fmtP(v)],
+    [`nota ${thresholds.mythic}+`, v >= thresholds.mythic, fmtP(v)],
     [`${gates.mythicVisit}%+ das visitas cumpridas`, Number(r.pctv) >= gates.mythicVisit, fmtP(Number(r.pctv))],
     [`${gates.mythicExec}+ lojas executadas`, Number(r.exec) >= gates.mythicExec, number(r.exec)]];
   return {t, v, falta: prox ? Math.max(0, prox.min() - v) : 0, prox, req, foil:isFoil(r)};
@@ -100,7 +105,7 @@ function openCard(id){
   const ultimo = hist.filter(h => h.carregado && h.nivel != null), subiu = ultimo.length > 1 && ultimo[ultimo.length-1].nivel > ultimo[ultimo.length-2].nivel;
   const novas = ms.filter(m => m.feito && m.ato === Math.max(...ATOS.filter(a => atoAberto(a.num)).map(a => a.num), 0));
   const verso = `<div class="detail-back"><div class="seal">${t.icon} ${esc(t.name.toUpperCase())} ${t.icon}</div><div class="back-sigil">${glyph(r)}</div>
-    <div><p><b>Por que ${esc(t.name)}?</b> ${fmtP(rx.v)} das lojas executadas ${lb('of')}. ${rx.prox ? `Faltam ${rx.falta.toFixed(1).replace('.',',')} p.p. para ${esc(rx.prox.name)}.` : 'Faixa máxima.'}</p>
+    <div><p><b>Por que ${esc(t.name)}?</b> Nota oficial ${fmtP(rx.v)} ${lb('of')}. ${rx.prox ? `Faltam ${rx.falta.toFixed(1).replace('.',',')} p.p. para ${esc(rx.prox.name)}.` : 'Faixa máxima.'}</p>
     <p style="margin-top:6px"><b>Holográfica</b> ${lb('rpg')}<br>${rx.req.map(([l,ok,val]) => `${ok?'✓':'✗'} ${l} <small>(${val})</small>`).join('<br>')}</p></div>
     <div class="seal">FARMA CARDS · Q4 2026</div></div>`;
   $('modalTitle').textContent = 'Ficha do personagem';
@@ -113,8 +118,8 @@ function openCard(id){
       ${subiu ? `<div class="levelup">✦ Subiu para o nível ${ultimo[ultimo.length-1].nivel} em ${monthLabel(ultimo[ultimo.length-1].k).toLowerCase()}</div>` : ''}
       <div class="casa-line">⌛ ${(() => { const pt = patente(r); return pt ? `<b>${esc(pt.nome)}</b> · ${textoCasa(pt.meses)}` : '<b>Tempo de casa pendente</b> (não encontrado no cadastro)'; })()} ${lb(patente(r)?'of':'pend')} <small>patente pelo tempo de casa; não entra no PWR nem no ranking</small></div>
       <div class="detail-section-title">Desempenho ${lb('of')}</div>
-      <div class="detail-attributes"><div class="attribute"><span>% LOJAS EXECUTADAS</span><b style="color:${t.color}">${pct(r.pct)}</b></div><div class="attribute"><span>LOJAS EXECUTADAS / PREVISTAS</span><b>${number(r.exec)} / ${number(r.lojas)}</b></div>
-        <div class="attribute"><span>% VISITAS CUMPRIDAS (desempate)</span><b>${pct(r.pctv)}</b></div><div class="attribute"><span>ELEGIBILIDADE Q4</span><b><span class="eleg ${el.st}">${el.txt}</span></b><small>${esc(el.just)}</small></div></div>
+      <div class="detail-attributes"><div class="attribute nota-attr"><span>NOTA OFICIAL (50% lojas + 50% frequência)</span><b style="color:${t.color}">${pct(getNota(r))}</b></div><div class="attribute"><span>% LOJAS EXECUTADAS</span><b>${pct(r.pct)}</b><small>${number(r.exec)} de ${number(r.lojas)} lojas</small></div>
+        <div class="attribute"><span>% FREQUÊNCIA</span><b>${pct(r.pctv)}</b><small>${r.cump!=null&&r.plan!=null?`${number(r.cump)} de ${number(r.plan)} visitas cobradas até o corte`:''}</small></div><div class="attribute"><span>% NEWSPAGE REALIZADO (3º desempate)</span><b>${r.pnp!=null?pct(r.pnp):'—'}</b></div><div class="attribute"><span>ELEGIBILIDADE Q4</span><b><span class="eleg ${el.st}">${el.txt}</span></b><small>${esc(el.just)}</small></div></div>
       <div class="detail-section-title">Poder de jogo (PWR) ${lb('rpg')}</div>
       <div class="pwr-break">${comp.map(([n,val,w,desc]) => `<div class="pwr-row"><span>${n} <small>${desc}</small></span><div class="duel-track"><div class="duel-fill" style="width:${Math.min(100,val)}%;background:${t.color}"></div></div><b>${Math.round(val)} × ${String(w).replace('.',',')} = ${(val*w).toFixed(1).replace('.',',')}</b></div>`).join('')}
         <div class="pwr-total">PWR = ${Math.round(power(r))} de 100</div></div>
@@ -134,7 +139,7 @@ function openCard(id){
   $('cardModal').hidden = false;
   const det = $('detailCard3D'); det.querySelector('.detail-side .player-card')?.removeAttribute('data-open-card');
   $('flipCard').onclick = () => det.classList.toggle('flipped');
-  $('copyCardInfo').onclick = () => copyText(`${r.nome}\n${kind==='sup'?'Supervisor':'Promotor'} · posição oficial ${r.pos}º (${periodo})\n% lojas executadas (OFICIAL): ${pct(r.pct)} (${r.exec} de ${r.lojas})\n% visitas cumpridas (OFICIAL): ${pct(r.pctv)}\nElegibilidade Q4: ${el.txt}\nRaridade (RPG): ${t.name} · PWR ${Math.round(power(r))} · nível ${lvl} · ${number(xpV)} XP`);
+  $('copyCardInfo').onclick = () => copyText(`${r.nome}\n${kind==='sup'?'Supervisor':'Promotor'} · posição oficial ${r.pos}º (${periodo})\nNota oficial: ${pct(getNota(r))}\n% lojas executadas (OFICIAL): ${pct(r.pct)} (${r.exec} de ${r.lojas})\n% visitas cumpridas (OFICIAL): ${pct(r.pctv)}\nElegibilidade Q4: ${el.txt}\nRaridade (RPG): ${t.name} · PWR ${Math.round(power(r))} · nível ${lvl} · ${number(xpV)} XP`);
   $('copyRank').onclick = () => copyText(`${r.nome} — posição oficial ${r.pos}º · ${pct(r.pct)} das lojas executadas (${periodo})`);
   $('compareThis').onclick = () => { closeModal('cardModal'); gotoPage('duel'); fillDuelSelects(); $('fighterA').value = identity(r); const nx = allRows().find(x => identity(x)!==identity(r) && x.kind===r.kind); if (nx) $('fighterB').value = identity(nx); renderDuel(); };
 }
@@ -297,8 +302,8 @@ function renderSupFeature(){
   el.innerHTML = `<div class="leader-zone"><div class="leader-card-mini">${cardHTML(r, 'sup', true)}</div><div class="leader-copy">
     <div class="rank">♛ 1º SUPERVISOR · ${esc(data().label)}</div><h3>${esc(s.nome)}</h3>
     <p>${number(s.prom)} promotores no time · ${p ? `${esc(p.nome)} · ${textoCasa(p.meses)}` : 'tempo de casa pendente'}</p>
-    <div class="big-score">${pct(s.pct)} <small>DAS LOJAS DO TIME EXECUTADAS</small></div>
-    <p style="margin-top:6px">${number(s.exec)} de ${number(s.lojas)} lojas do time (soma das lojas de todos os promotores, não média dos %).${time[0] ? ` Melhor do time: ${esc(time[0].nome)} (${pct(time[0].pct)}).` : ''}</p>
+    <div class="big-score">${pct(getNota(s))} <small>NOTA DO TIME</small></div>
+    <p style="margin-top:6px">Lojas ${pct(s.pct)} · frequência ${pct(s.pctv)} · ${number(s.exec)} de ${number(s.lojas)} lojas do time (soma das lojas de todos os promotores, não média dos %).${time[0] ? ` Melhor do time: ${esc(time[0].nome)} (${pct(time[0].pct)}).` : ''}</p>
     <button class="btn" style="margin-top:12px" data-open-card="${esc(identity(r))}">Inspecionar carta ↗</button></div></div>`;
 }
 

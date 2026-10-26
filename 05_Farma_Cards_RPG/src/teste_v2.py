@@ -61,7 +61,7 @@ with sync_playwright() as p:
     pg.fill('#searchCards', ''); pg.select_option('#roleFilter', 'sup'); pg.wait_for_timeout(200)
     ok('Filtro supervisores', pg.locator('#collectionCards .player-card').count() == len(oficial['q4']['sup']))
     pg.select_option('#roleFilter', 'all'); pg.select_option('#rarityFilter', 'mythic'); pg.wait_for_timeout(200)
-    n_myth = sum(1 for r in oficial['q4']['prom'] + oficial['q4']['sup'] if r['pct'] >= 95)
+    n_myth = sum(1 for r in oficial['q4']['prom'] + oficial['q4']['sup'] if r.get('nota', r['pct']) >= 95)
     ok('Filtro raridade Mítica', pg.locator('#collectionCards .player-card').count() == n_myth, str(n_myth))
     pg.select_option('#rarityFilter', 'all'); pg.select_option('#ufFilter', 'RS'); pg.wait_for_timeout(200)
     ok('Filtro UF', pg.locator('#collectionCards .player-card').count() == sum(1 for r in oficial['q4']['prom'] if r['uf'] == 'RS'))
@@ -282,6 +282,20 @@ with sync_playwright() as p:
     ok('Fundo animado ativo (estrelas e partículas)', pg.evaluate("getComputedStyle(document.querySelector('.ambient')).display") != 'none' and pg.evaluate("parseFloat(document.getElementById('particles').style.opacity)") >= .5)
     lg = pg.evaluate("()=>{const [a,b]=[...document.querySelectorAll('.hero-logos .logo-chip')].map(c=>c.getBoundingClientRect());return [a.width,a.height,b.width,b.height]}")
     ok('Logos SPOT e Reckitt com o mesmo selo', lg[0] == lg[2] and lg[1] == lg[3], str(lg))
+
+
+    # ---------- nota oficial (26/10): 50% lojas + 50% frequência ----------
+    pg.goto(V2.as_uri()); pg.wait_for_timeout(500)
+    l1 = oficial['q4']['prom'][0]
+    ok('Santuário: líder pela nota oficial', 'NOTA OFICIAL' in pg.inner_text('#leaderFeature') and f"{l1['nota']:.1f}".replace('.', ',') in pg.inner_text('#leaderFeature'), f"{l1['nome']} {l1['nota']}")
+    ok('Santuário: supervisor Top 1 pela nota do time', 'NOTA DO TIME' in pg.inner_text('#supFeature') and oficial['q4']['sup'][0]['nome'] in pg.inner_text('#supFeature'))
+    pg.click('.sidebar .nav-btn[data-page="collection"]'); pg.wait_for_timeout(300)
+    ok('Carta mostra NOTA', 'NOTA' in pg.inner_text('#collectionCards .player-card >> nth=0'))
+    pg.locator('#collectionCards .player-card').first.click(); pg.wait_for_timeout(300)
+    fx = pg.inner_text('#modalBody')
+    ok('Ficha: nota oficial, % lojas, % frequência e % NewsPage', 'NOTA OFICIAL' in fx and '% FREQUÊNCIA' in fx and '% NEWSPAGE' in fx and 'visitas cumpridas' not in fx.lower())
+    pg.keyboard.press('Escape')
+    ok('Raridade segue a nota oficial', pg.evaluate("()=>MESES.q4.prom.every(r=>tier(r).id===tier({pct:r.nota}).id)"))
 
 
     # celular
