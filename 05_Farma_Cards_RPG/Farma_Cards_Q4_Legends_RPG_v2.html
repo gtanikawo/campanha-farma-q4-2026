@@ -486,7 +486,7 @@ html[data-tema="escuro"] .modal{background:#05030Acc}
 
   <section id="page-forge" class="page">
     <div class="page-title"><div><div class="eyebrow">Regras da coleção</div><h1>Forja de raridade</h1><p>Estas são as regras de raridade da campanha. Valem igual para todo mundo e só mudam numa nova versão do arquivo.</p></div></div>
-    <div class="forge-grid"><div class="panel"><div class="panel-head"><h3>⚒ Faixas de raridade</h3><span>% de lojas executadas</span></div><div id="rarityInputs"></div></div><div class="panel"><div class="panel-head"><h3>✧ Requisitos de raridade máxima</h3><span>Efeitos e selos</span></div><div id="gatingInputs"></div><div class="formula"><strong>Como o sistema é calculado</strong><br>• Raridade base = percentual de lojas executadas do placar oficial.<br>• Poder de jogo (PWR) = 90% nota oficial + 10% índice de volume (até 50 lojas executadas).<br>• Efeitos especiais requerem sinais adicionais, como disciplina de visitas e volume mínimo.<br>• XP = XP base do PWR + XP das missões conquistadas; nível sobe a cada 250 XP (até 30).<br>• PWR, nível, XP, selos e raridade nunca alteram o ranking oficial.</div></div></div>
+    <div class="forge-grid"><div class="panel"><div class="panel-head"><h3>⚒ Faixas de raridade</h3><span>% de lojas executadas</span></div><div id="rarityInputs"></div></div><div class="panel"><div class="panel-head"><h3>✧ Requisitos de raridade máxima</h3><span>Efeitos e selos</span></div><div id="gatingInputs"></div><div class="formula"><strong>Como o sistema é calculado</strong><br>• Raridade base = percentual de lojas executadas do placar oficial.<br>• Poder de jogo (PWR) = nota oficial (50% lojas + 50% frequência), só percentuais, sem peso para o tamanho do roteiro.<br>• Efeitos especiais requerem sinais adicionais, como disciplina de visitas e volume mínimo.<br>• XP = XP base do PWR + XP das missões conquistadas; nível sobe a cada 250 XP (até 30).<br>• PWR, nível, XP, selos e raridade nunca alteram o ranking oficial.</div></div></div>
     <div id="forgeRules" class="forge-rules"></div><div class="notice"><strong>Importante:</strong> no arquivo parcial de outubro, os atributos de visitas e lojas executadas servem como reforço visual. Selos de constância trimestral e campeões definitivos permanecem bloqueados até importar os dados mensais restantes.</div>
   </section>
   
@@ -543,7 +543,7 @@ function identity(r){return (r.kind||'prom')+'::'+norm(r.nome)}
 function uniquePeople(){const out=new Map();['q4','out','nov','dez'].forEach(k=>{if(!hasMonth(k))return;allRows(k).forEach(r=>{const id=identity(r);if(!out.has(id))out.set(id,r)})});return [...out.values()]}
 function maxExec(){const vals=allRows().map(r=>Number(r.exec)||0);return Math.max(50,...vals)}
 function volumeIndex(r){return Math.min(100,(Number(r.exec||0)/50)*100)}
-function power(r){return Math.round((getNota(r)*.9+volumeIndex(r)*.1)*10)/10}
+function power(r){return Math.round(getNota(r)*10)/10}
 function xpBase(r){return Math.round(power(r)*power(r)/100*25)}
 function xp(r){return xpBase(r)+missionXP(r)}
 function level(r){return Math.max(1,Math.min(NIVEL_MAX,1+Math.floor(xp(r)/XP_NIVEL)))}
@@ -552,7 +552,7 @@ function mythicUnlocked(r){return getNPScore(r)>=thresholds.mythic&&Number(r.pct
 function isFoil(r){return tier(r).id==='mythic'&&mythicUnlocked(r)}
 function extraBadges(r){return missoesDe(r).filter(m=>m.feito).sort((a,b)=>b.xp-a.xp).map(m=>({label:m.titulo.toUpperCase(),icon:m.icon,desc:m.desc}))}
 function eligibleAllMonths(r){return ['out','nov','dez'].every(k=>hasMonth(k)&&allRows(k).some(x=>identity(x)===identity(r)))}
-function roleOf(r){if(getNPScore(r)>=90)return 'Arcanista da Execução';if(Number(r.pctv)>=gates.disciplineVisit)return 'Guardião da Disciplina';if(Number(r.exec)>=gates.volumeExec)return 'Cavaleiro do Volume';if(getNPScore(r)>=thresholds.gold)return 'Sentinela de Execução';return 'Viajante da Rota'}
+function roleOf(r){if(getNPScore(r)>=90)return 'Arcanista da Execução';if(Number(r.pctv)>=gates.disciplineVisit)return 'Guardião da Disciplina';if(getNPScore(r)>=thresholds.gold)return 'Sentinela de Execução';return 'Viajante da Rota'}
 function glyph(r){const s=norm(r.nome);let sum=0;for(let i=0;i<s.length;i++)sum=(sum*31+s.charCodeAt(i))>>>0;return ICONS[sum%ICONS.length]}
 function cssTier(r){let t=tier(r);if(t.id==='mythic'&&isFoil(r))return 'mythic';return t.id}
 function tierClass(r){return 'rarity-'+tier(r).id}
@@ -652,20 +652,18 @@ function renderForgeRules(){
  const classes=tab(['Ordem','Classe','Quando a carta recebe'],[
   ['1º','Arcanista da Execução','90% ou mais das lojas executadas'],
   ['2º','Guardião da Disciplina',`${gates.disciplineVisit}% ou mais de frequência`],
-  ['3º','Cavaleiro do Volume',`${gates.volumeExec} lojas executadas ou mais`],
   ['4º','Sentinela de Execução',`${thresholds.gold}% ou mais das lojas executadas (faixa Ouro)`],
   ['5º','Viajante da Rota','nenhuma das anteriores']]);
  const raridade=tab(['Raridade','Faixa da nota oficial','Observação'],[
   ['Comum',`abaixo de ${thresholds.bronze}%`,''],['Bronze',`${thresholds.bronze}% a ${thresholds.silver-0.1}%`,''],['Prata',`${thresholds.silver}% a ${thresholds.gold-0.1}%`,''],
   ['Ouro',`${thresholds.gold}% a ${thresholds.epic-0.1}%`,''],['Épica',`${thresholds.epic}% a ${thresholds.mythic-0.1}%`,''],
   ['Mítica selada',`${thresholds.mythic}% ou mais`,'sem os requisitos extras: moldura Mítica, sem holografia'],
-  ['Mítica holográfica',`${thresholds.mythic}% ou mais`,`e ${gates.mythicVisit}%+ de frequência e ${gates.mythicExec}+ lojas executadas`]]);
+  ['Mítica holográfica',`${thresholds.mythic}% ou mais`,`e ${gates.mythicVisit}%+ de frequência`]]);
  const missoes=tab(['Ato','Missão','Selo','Regra','XP'],MISSOES.map(m=>{const a=ATOS[m.ato-1];return [`${a.nome} · ${a.mes}`,`${m.icon} ${esc(m.titulo)}`,TIERS[m.tier].nome,esc(m.desc),`+${m.xp}`]}));
  const trilha=tab(['Nível da trilha','XP de missões','Recompensa na carta'],TRILHA.map(t=>[t.nome,`${number(t.xp)}+`,esc(t.premio)]));
  const somaAto=n=>number(MISSOES.filter(m=>m.ato===n).reduce((s,m)=>s+m.xp,0));
  const formulas=`<div class="formula">
-  <b>Índice de volume</b> = mín(100; lojas executadas ÷ 50 × 100).<br>
-  <b>PWR (poder de jogo)</b> = 90% × nota oficial + 10% × índice de volume. Segue a mesma ordem do ranking; o volume é só um pequeno bônus.<br>
+  <b>PWR (poder de jogo)</b> = nota oficial (50% × % lojas executadas + 50% × % frequência). Só percentuais: quem tem roteiro maior ou menor ganha na mesma proporção.<br>
   <b>XP base</b> = arredondar(PWR × PWR ÷ 100 × 25).<br>
   <b>XP total</b> = XP base + XP das missões conquistadas (Ato I até ${somaAto(1)} · Ato II até ${somaAto(2)} · Ato III até ${somaAto(3)}).<br>
   <b>Nível</b> = 1 + a cada ${XP_NIVEL} XP, até o nível ${NIVEL_MAX}.<br>
@@ -674,7 +672,7 @@ function renderForgeRules(){
  $('forgeRules').innerHTML=bloco('◇ Raridade completa','nota oficial',raridade)+bloco('♜ Classes da carta','decididas nesta ordem',classes)+bloco('✧ Missões e selos','15 missões em 3 atos',missoes)+bloco('♛ Trilha de recompensas','XP das missões',trilha)+bloco('⚙ Fórmulas do jogo','como cada número é calculado',formulas)+(typeof PATENTES!=='undefined'?bloco('⌛ Patente na guilda','tempo de casa (cadastro)',tab(['Patente','Tempo de casa','Efeito'],PATENTES.map((p,i)=>[p[1],PATENTES[i+1]?`${p[0]} a ${PATENTES[i+1][0]-1} meses`:`${p[0]} meses ou mais`,'Título na carta e filtro da coleção. Não entra no PWR, no XP nem no ranking.']))):'');
 }
 function renderChronicle(selected=activeKey==='q4'?'out':activeKey){const keys=['out','nov','dez'];$('monthTrack').innerHTML=keys.map((k,i)=>{const ready=hasMonth(k),d=MESES[k]||{};return `<button class="month-node ${ready?'available':'future'}" data-month="${k}" ${ready?'':'disabled'}><span class="node-orb">${ready?'✓':'⌁'}</span><div class="month-name">${monthLabel(k)}</div><div class="month-state">${ready?esc(d.sub||'Dados carregados'):'Dados ainda não importados'}</div></button>`}).join('');document.querySelectorAll('[data-month]').forEach(b=>b.addEventListener('click',()=>renderChronicle(b.dataset.month)));const d=MESES[selected];if(!hasMonth(selected)){$('monthResults').innerHTML=`<div class="eyebrow">${monthLabel(selected)}</div><h3 style="margin-top:10px">✧ Esta página ainda está selada</h3><p>Quando a versão do placar oficial incluir ${monthLabel(selected).toLowerCase()}, importe o HTML atualizado. Os valores serão lidos do arquivo, sem transformar ausência de dados em zero.</p><button class="btn primary" onclick="document.getElementById('importBtn').click()">Importar atualização</button>`;return}$('monthResults').innerHTML=`<div class="panel-head"><div><h3>${esc(monthSummaryLabel(d))}</h3><span>Fonte: placar original importado</span></div><span class="tag">${d.prom.length} promotores · ${d.sup.length} supervisores</span></div><div class="stat-grid" style="margin:0 0 15px"><div class="stat"><div class="label">LOJAS NO ROTEIRO</div><strong>${number(d.tot?.lojas||0)}</strong></div><div class="stat"><div class="label">LOJAS EXECUTADAS</div><strong>${number(d.tot?.exec||0)}</strong></div><div class="stat"><div class="label">EXECUÇÃO TOTAL</div><strong>${pct(d.tot?.lojas?(d.tot.exec/d.tot.lojas*100):0)}</strong></div><div class="stat"><div class="label">SUPERVISORES</div><strong>${number(d.sup.length)}</strong></div></div><h3 style="margin:12px 0 8px">Top 5 promotores · ${esc(d.label||monthLabel(selected))}</h3>${d.prom.slice(0,5).map(r=>`<div class="rank-line"><span class="rank-pos">#${r.pos}</span><div><div class="rank-name">${esc(r.nome)}</div><div class="rank-bar"><span style="width:${Math.min(100,r.pct)}%"></span></div></div><span class="rank-percent">${pct(r.pct)}</span></div>`).join('')}<p style="margin-top:13px">${esc(stripHTML(d.periodo||d.rodape||''))}</p>`}
-function renderForge(){const row=(l,s,v,off)=>`<div class="setting-row"><div><strong>${l}</strong><small>${s}</small></div><span class="val${off?' off':''}">${v}</span></div>`;$('rarityInputs').innerHTML=[['bronze','Bronze'],['silver','Prata'],['gold','Ouro'],['epic','Épica'],['mythic','Mítica']].map(([k,n])=>row(`${n} a partir de`,'nota oficial no recorte',thresholds[k]+'%')).join('')+row('Comum',`abaixo de ${thresholds.bronze}%`,'&lt; '+thresholds.bronze+'%');$('gatingInputs').innerHTML=[row('Holográfica: visitas mínimas','% de frequência, além da faixa Mítica',gates.mythicVisit+'%'),row('Holográfica: volume mínimo','lojas executadas no recorte',gates.mythicExec),row('Classe Guardião da Disciplina','% de frequência',gates.disciplineVisit+'%'),row('Classe Cavaleiro do Volume','lojas executadas no recorte',gates.volumeExec),row('Proposta: Mítica trimestral','Exigir os 3 meses e a faixa Mítica em todos. Não é regra oficial.',PROPOSALS.trimestral.on?'ligada':'desligada',!PROPOSALS.trimestral.on),row('Proposta: amostra mínima',`Exigir ao menos ${PROPOSALS.amostra.min} lojas no roteiro para a holográfica. Não é regra oficial.`,PROPOSALS.amostra.on?'ligada':'desligada',!PROPOSALS.amostra.on)].join('')}
+function renderForge(){const row=(l,s,v,off)=>`<div class="setting-row"><div><strong>${l}</strong><small>${s}</small></div><span class="val${off?' off':''}">${v}</span></div>`;$('rarityInputs').innerHTML=[['bronze','Bronze'],['silver','Prata'],['gold','Ouro'],['epic','Épica'],['mythic','Mítica']].map(([k,n])=>row(`${n} a partir de`,'nota oficial no recorte',thresholds[k]+'%')).join('')+row('Comum',`abaixo de ${thresholds.bronze}%`,'&lt; '+thresholds.bronze+'%');$('gatingInputs').innerHTML=[row('Holográfica: visitas mínimas','% de frequência, além da faixa Mítica',gates.mythicVisit+'%'),row('Classe Guardião da Disciplina','% de frequência',gates.disciplineVisit+'%'),row('Proposta: Mítica trimestral','Exigir os 3 meses e a faixa Mítica em todos. Não é regra oficial.',PROPOSALS.trimestral.on?'ligada':'desligada',!PROPOSALS.trimestral.on),row('Proposta: amostra mínima',`Exigir ao menos ${PROPOSALS.amostra.min} lojas no roteiro para a holográfica. Não é regra oficial.`,PROPOSALS.amostra.on?'ligada':'desligada',!PROPOSALS.amostra.on)].join('')}
 function saveThresholds(e){e.preventDefault();let vals={};['bronze','silver','gold','epic','mythic'].forEach(k=>vals[k]=Math.max(1,Math.min(99,Number($('th-'+k).value)||DEFAULT_THRESHOLDS[k])));let ordered=['bronze','silver','gold','epic','mythic'];for(let i=1;i<ordered.length;i++)vals[ordered[i]]=Math.max(vals[ordered[i]],vals[ordered[i-1]]+1);if(vals.mythic>99){vals={...DEFAULT_THRESHOLDS};showToast('Os limiares precisam manter espaço entre as cinco raridades. Padrões restaurados.')}else{thresholds=vals;setStored('farmaCards.thresholds',JSON.stringify(thresholds));showToast('Faixas de raridade atualizadas.')}refreshApp()}
 function saveGateValues(){const next={};Object.keys(DEFAULT_GATES).forEach(k=>next[k]=Math.max(0,Math.min(100,Number($('gate-'+k).value)||0)));gates={...next};setStored('farmaCards.gates',JSON.stringify(gates));showToast('Requisitos de raridade e selos salvos.');refreshApp()}
 function refreshApp(){try{renderSupFeature()}catch(e){console.error(e)};try{renderForgeRules()}catch(e){console.error(e)};renderHome();setupCollectionFilters();renderCollection();renderQuests();renderChronicle();renderForge();fillDuelSelects();renderDuel()}
@@ -698,7 +696,7 @@ const MESES_Q4 = ['out','nov','dez'];
 /* --- nota oficial (26/10): 50% lojas + 50% frequência; raridade e carta usam a nota --- */
 function getNota(r){ const v = Number(r && r.nota); return Number.isFinite(v) ? v : getNPScore(r) }
 function tier(r){ const v = getNota(r) ?? 0; let sel = RARITIES[0]; for (const it of RARITIES.slice(1)) if (v >= it.min()) sel = it; return sel }
-function mythicUnlocked(r){ return getNota(r) >= thresholds.mythic && Number(r.pctv) >= gates.mythicVisit && Number(r.exec) >= gates.mythicExec && proposalsOk(r) }
+function mythicUnlocked(r){ return getNota(r) >= thresholds.mythic && Number(r.pctv) >= gates.mythicVisit && proposalsOk(r) }   // sem mínimo de lojas: roteiro grande ou pequeno tem a mesma chance
 
 /* --- meses: corte e fechado (vêm do placar) --- */
 function mesFechado(k){ return !!(MESES[k] && MESES[k].disponivel && MESES[k].fechado) }
@@ -776,8 +774,7 @@ function raridadeExplicada(r){
   const v = getNota(r), t = tier(r), idx = RARITIES.findIndex(x => x.id === t.id), prox = RARITIES[idx+1];
   const req = [
     [`nota ${thresholds.mythic}+`, v >= thresholds.mythic, fmtP(v)],
-    [`${gates.mythicVisit}%+ de frequência`, Number(r.pctv) >= gates.mythicVisit, fmtP(Number(r.pctv))],
-    [`${gates.mythicExec}+ lojas executadas`, Number(r.exec) >= gates.mythicExec, number(r.exec)]];
+    [`${gates.mythicVisit}%+ de frequência`, Number(r.pctv) >= gates.mythicVisit, fmtP(Number(r.pctv))]];
   return {t, v, falta: prox ? Math.max(0, prox.min() - v) : 0, prox, req, foil:isFoil(r)};
 }
 
@@ -786,7 +783,7 @@ function openCard(id){
   const r = findRowById(id); if (!r) return; activeDetail = id;
   const t = tier(r), kind = r.kind || 'prom', el = elegibilidade(r), rx = raridadeExplicada(r), hist = historico(r), ms = missoesDe(r);
   const xpV = xp(r), lvl = level(r), falta = lvl >= NIVEL_MAX ? 0 : XP_NIVEL - (xpV % XP_NIVEL), tr = trilhaDe(r);
-  const comp = [['Nota oficial', getNota(r)||0, .90, '50% lojas + 50% frequência'], ['Volume', volumeIndex(r), .10, `lojas executadas ÷ 50 (máx. 100)`]];
+  const comp = [['Lojas', Number(r.pct)||0, .5, '% lojas executadas'], ['Frequência', Number(r.pctv)||0, .5, 'pesquisas ÷ visitas planejadas']];
   const periodo = activeKey==='q4' ? 'Q4 acumulado · ' + (data().fechado ? 'trimestre fechado' : 'parcial até ' + corteBR('q4')) : monthLabel(activeKey) + ' · ' + (mesFechado(activeKey) ? 'mês fechado' : 'parcial até ' + corteBR(activeKey));
   const ultimo = hist.filter(h => h.carregado && h.nivel != null), subiu = ultimo.length > 1 && ultimo[ultimo.length-1].nivel > ultimo[ultimo.length-2].nivel;
   const novas = ms.filter(m => m.feito && m.ato === Math.max(...ATOS.filter(a => atoAberto(a.num)).map(a => a.num), 0));
@@ -860,7 +857,7 @@ function renderDuel(){
   const a = findRowById($('fighterA').value), b = findRowById($('fighterB').value);
   if (!a || !b){ $('duelResult').innerHTML = '<div class="empty-state">Escolha dois participantes para iniciar o confronto.</div>'; return; }
   if (identity(a)===identity(b)){ $('duelResult').innerHTML = '<div class="empty-state">Escolha dois participantes diferentes.</div>'; return; }
-  const at = r => [['Nota oficial', getNota(r)||0, .90], ['Volume', volumeIndex(r), .10]];
+  const at = r => [['Lojas', Number(r.pct)||0, .5], ['Frequência', Number(r.pctv)||0, .5]];
   const A = at(a), B = at(b), pa = power(a), pb = power(b);
   const vant = A.map((x,i) => ({n:x[0], a:x[1], b:B[i][1], w:x[2], cont:(x[1]-B[i][1])*x[2]}));
   const venc = pa===pb ? null : pa>pb ? a : b, perd = venc===a ? b : a;

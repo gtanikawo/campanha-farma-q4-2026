@@ -74,20 +74,18 @@ function renderForgeRules(){
  const classes=tab(['Ordem','Classe','Quando a carta recebe'],[
   ['1º','Arcanista da Execução','90% ou mais das lojas executadas'],
   ['2º','Guardião da Disciplina',`${gates.disciplineVisit}% ou mais das visitas cumpridas`],
-  ['3º','Cavaleiro do Volume',`${gates.volumeExec} lojas executadas ou mais`],
   ['4º','Sentinela de Execução',`${thresholds.gold}% ou mais das lojas executadas (faixa Ouro)`],
   ['5º','Viajante da Rota','nenhuma das anteriores']]);
  const raridade=tab(['Raridade','Faixa da nota oficial','Observação'],[
   ['Comum',`abaixo de ${thresholds.bronze}%`,''],['Bronze',`${thresholds.bronze}% a ${thresholds.silver-0.1}%`,''],['Prata',`${thresholds.silver}% a ${thresholds.gold-0.1}%`,''],
   ['Ouro',`${thresholds.gold}% a ${thresholds.epic-0.1}%`,''],['Épica',`${thresholds.epic}% a ${thresholds.mythic-0.1}%`,''],
   ['Mítica selada',`${thresholds.mythic}% ou mais`,'sem os requisitos extras: moldura Mítica, sem holografia'],
-  ['Mítica holográfica',`${thresholds.mythic}% ou mais`,`e ${gates.mythicVisit}%+ de visitas cumpridas e ${gates.mythicExec}+ lojas executadas`]]);
+  ['Mítica holográfica',`${thresholds.mythic}% ou mais`,`e ${gates.mythicVisit}%+ de frequência`]]);
  const missoes=tab(['Ato','Missão','Selo','Regra','XP'],MISSOES.map(m=>{const a=ATOS[m.ato-1];return [`${a.nome} · ${a.mes}`,`${m.icon} ${esc(m.titulo)}`,TIERS[m.tier].nome,esc(m.desc),`+${m.xp}`]}));
  const trilha=tab(['Nível da trilha','XP de missões','Recompensa na carta'],TRILHA.map(t=>[t.nome,`${number(t.xp)}+`,esc(t.premio)]));
  const somaAto=n=>number(MISSOES.filter(m=>m.ato===n).reduce((s,m)=>s+m.xp,0));
  const formulas=`<div class="formula">
-  <b>Índice de volume</b> = mín(100; lojas executadas ÷ 50 × 100).<br>
-  <b>PWR (poder de jogo)</b> = 90% × nota oficial + 10% × índice de volume. Segue a mesma ordem do ranking; o volume é só um pequeno bônus.<br>
+  <b>PWR (poder de jogo)</b> = nota oficial (50% × % lojas executadas + 50% × % frequência). Só percentuais: quem tem roteiro maior ou menor ganha na mesma proporção.<br>
   <b>XP base</b> = arredondar(PWR × PWR ÷ 100 × 25).<br>
   <b>XP total</b> = XP base + XP das missões conquistadas (Ato I até ${somaAto(1)} · Ato II até ${somaAto(2)} · Ato III até ${somaAto(3)}).<br>
   <b>Nível</b> = 1 + a cada ${XP_NIVEL} XP, até o nível ${NIVEL_MAX}.<br>
