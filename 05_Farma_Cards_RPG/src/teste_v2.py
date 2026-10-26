@@ -157,7 +157,7 @@ with sync_playwright() as p:
     ok('Confronto não altera o ranking oficial', pg.evaluate("()=>MESES.q4.prom.map(r=>r.pos).join()") == pos0)
     pg.click('.sidebar .nav-btn[data-page="quests"]'); pg.wait_for_timeout(300)
     jt = pg.inner_text('#journeyBox')
-    ok('Missões: "Atingida até agora" (outubro parcial) e progresso com evidência', 'Atingida até agora' in jt and 'Progresso' in jt and 'Outubro: 98,2%' in jt)
+    ok('Missões: "Atingida até agora" (outubro parcial) e progresso com evidência', 'Atingida até agora' in jt and 'Progresso' in jt and ('Outubro: ' + f"{oficial['out']['prom'][0]['pct']:.1f}".replace('.', ',') + '%') in jt)
     ok('Missões de novembro e dezembro: Bloqueada', jt.count('Bloqueada') == 10)
     pg.screenshot(path=str(PRINTS / '17_jornada.png'), full_page=True)
     pg.click('.sidebar .nav-btn[data-page="chronicle"]'); pg.wait_for_timeout(300)

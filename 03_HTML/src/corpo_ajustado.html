@@ -75,8 +75,8 @@ const PACOTES_BASE = __PACOTES__;
 const MESES = __MESES__;
 const ORDEM_MESES = ['out','nov','dez','q4'];
 /* REGRA OFICIAL (validada pelo Gustavo em 26/10/2026): nota = 50% × % lojas executadas + 50% × % frequência.
-   % frequência = Σ mín(pesquisas, planejado) ÷ Σ máx(visitas vencidas, visitas feitas). As visitas planejadas dividem
-   o mês em janelas iguais; uma visita só é cobrada quando a janela dela fecha (no mês fechado, o planejado inteiro).
+   % frequência = regra do Tracking NP Farma (% Realizado Newspage): Σ pesquisas NewsPage ÷ Σ visitas planejadas do mês,
+   sem proporcionalidade e sem limite por loja (desde 26/10, depois da validação do caso Anderson).
    Desempate: % lojas executadas → % frequência → % NewsPage realizado (pesquisas ÷ planejado) → nome. Vale para promotores e supervisores. */
 const REGRA_NOTA = true;
 
@@ -168,14 +168,14 @@ function calcular(meses){
     for (const l of PACOTES[m].lojas){
       const [,, cod, colab, sup, uf, plan, pesq] = l;
       if (ehVaga(colab)) continue;
-      const e = pesq > 0 ? 1 : 0, c = Math.min(pesq, plan), k = norm(colab), v = vencidas(plan, dm, dc);
+      const e = pesq > 0 ? 1 : 0, c = pesq, k = norm(colab), v = plan;   // frequência como no Tracking: pesquisas ÷ planejado do mês
       lojas++; exec += e;
       let p = P.get(k); if (!p){ p = {nomeRaw:colab, lojas:0, exec:0, plan:0, cump:0, venc:0, den:0, pesq:0, pend:[], uf:{}, supM:{}, meses:new Set()}; P.set(k, p); }
-      p.lojas++; p.exec += e; p.plan += plan; p.cump += c; p.venc += v; p.den += Math.max(v, c); p.pesq += pesq; if (!e) p.pend.push(v);
+      p.lojas++; p.exec += e; p.plan += plan; p.cump += c; p.venc += v; p.den += plan; p.pesq += pesq; if (!e) p.pend.push(v);
       p.uf[uf] = (p.uf[uf]||0) + 1; p.meses.add(m);
       (p.supM[m] = p.supM[m] || {})[sup] = (p.supM[m][sup] || 0) + 1;
       const ks = norm(sup); let s = S.get(ks); if (!s){ s = {nomeRaw:sup, lojas:0, exec:0, plan:0, cump:0, den:0, pesq:0, pessoas:new Set(), meses:new Set()}; S.set(ks, s); }
-      s.lojas++; s.exec += e; s.plan += plan; s.cump += c; s.den += Math.max(v, c); s.pesq += pesq; s.pessoas.add(k); s.meses.add(m);
+      s.lojas++; s.exec += e; s.plan += plan; s.cump += c; s.den += plan; s.pesq += pesq; s.pessoas.add(k); s.meses.add(m);
     }
   }
   const nm = (a,b) => a.nome < b.nome ? -1 : a.nome > b.nome ? 1 : 0;
@@ -233,7 +233,7 @@ function montarViews(){
     v.prom.forEach(r => r.eleg = elegibilidade(r.key, 'prom', PRES));
     v.sup.forEach(r => r.eleg = elegibilidade(r.key, 'sup', PRES));
     v.rodape = `Fonte: ${[...new Set(v.meses.map(m => PACOTES[m].fonte))].join(' · ')} · vaga em aberto fora do ranking · loja abonada (Planejado Real 0) fora da conta · loja repetida na mesma rota conta 1 vez`
-      + ' · nota = 50% lojas + 50% frequência; visita cobrada só depois que a janela dela fecha'; });
+      + ' · nota = 50% lojas + 50% frequência (pesquisas NewsPage ÷ visitas planejadas do mês, como no Tracking)'; });
 }
 
 /* versão de validação: aviso no topo e regras da nota no quadro de regras */
@@ -241,7 +241,7 @@ if (REGRA_NOTA){
   document.querySelector('.rules').innerHTML = `
     <div class="rule"><b>Loja executada</b><p>Loja do roteiro do mês com pelo menos 1 pesquisa NewsPage no mês.</p></div>
     <div class="rule"><b>Nota</b><p>50% × % lojas executadas + 50% × % frequência. Vale para promotores e supervisores. No Q4, cada parte soma os totais dos meses apurados (não é média dos %).</p></div>
-    <div class="rule"><b>% Frequência</b><p>Visitas feitas (até o planejado de cada loja) ÷ visitas cobradas. Mensal e bimestral: 1 visita, cobrada no fim do mês. Quinzenal: 2, cobradas na metade e no fim do mês. Semanal: 1 por semana, cada uma no fim da sua semana. Visita feita antes do prazo já conta.</p></div>
+    <div class="rule"><b>% Frequência</b><p>Como no Tracking NP Farma (% Realizado Newspage): pesquisas NewsPage feitas ÷ visitas planejadas no mês para as lojas do roteiro. Loja quinzenal com 1 pesquisa conta 1 de 2.</p></div>
     <div class="rule"><b>Desempate</b><p>1º % de lojas executadas · 2º % frequência · 3º % NewsPage realizado (pesquisas ÷ planejado). Premiação: 3 promotores e 1 supervisor, com roteiro nos 3 meses.</p></div>`;
 }
 
@@ -296,7 +296,7 @@ function chart(rows, g){
 }
 const COLS = {
   prom: REGRA_NOTA
-    ? [['pos','Posição',''],['nome','Promotor',''],['sup','Supervisor',''],['uf','UF','c'],['exec','Lojas exec.','r'],['pct','% Lojas exec.','r'],['visitas','Visitas feitas / cobradas','r'],['pctf','% Frequência','r'],['notaPct','Nota','r'],['pctnp','% NewsPage','r'],['eleg','Elegibilidade Q4','c']]
+    ? [['pos','Posição',''],['nome','Promotor',''],['sup','Supervisor',''],['uf','UF','c'],['exec','Lojas exec.','r'],['pct','% Lojas exec.','r'],['visitas','Pesquisas / planejadas','r'],['pctf','% Frequência','r'],['notaPct','Nota','r'],['pctnp','% NewsPage','r'],['eleg','Elegibilidade Q4','c']]
     : [['pos','Posição',''],['nome','Promotor',''],['sup','Supervisor',''],['uf','UF','c'],['exec','Lojas exec.','r'],['pct','% Lojas exec.','r'],['pctv','% Visitas (desempate)','r'],['eleg','Elegibilidade Q4','c']],
   sup:[['pos','Posição',''],['nome','Supervisor',''],['prom','Promotores','r'],['exec','Lojas exec.','r'],['pct','% Lojas exec.','r'],['pctf','% Frequência','r'],['notaPct','Nota','r'],['pctnp','% NewsPage','r'],['eleg','Elegibilidade Q4','c']]
 };
@@ -361,7 +361,7 @@ function body(g){
   document.getElementById('empty-'+g).hidden = rows.length>0;
   document.getElementById('tbody-'+g).innerHTML = rows.map(r => { const cls = (r.pos<=3?'top r'+r.pos:'');
     return g==='prom' && REGRA_NOTA
-      ? `<tr class="${cls}"><td class="pos">${r.pos}º</td><td>${esc(r.nome)}</td><td>${esc(r.sup)}</td><td class="c">${esc(r.uf)}</td><td class="r mono">${r.exec}/${r.lojas}</td><td class="r mono">${pct(r.pct)}</td><td class="r mono" title="cobradas = visitas vencidas até o corte, ou feitas se for maior">${r.cump}/${r.den}</td><td class="r mono">${pct(r.pctf)}</td><td class="r pct">${pct(r.notaPct)}</td><td class="r mono">${pct(r.pctnp)}</td><td class="c">${chip(r.eleg)}</td></tr>`
+      ? `<tr class="${cls}"><td class="pos">${r.pos}º</td><td>${esc(r.nome)}</td><td>${esc(r.sup)}</td><td class="c">${esc(r.uf)}</td><td class="r mono">${r.exec}/${r.lojas}</td><td class="r mono">${pct(r.pct)}</td><td class="r mono" title="pesquisas NewsPage ÷ visitas planejadas no mês (como no Tracking)">${r.cump}/${r.den}</td><td class="r mono">${pct(r.pctf)}</td><td class="r pct">${pct(r.notaPct)}</td><td class="r mono">${pct(r.pctnp)}</td><td class="c">${chip(r.eleg)}</td></tr>`
       : g==='prom'
       ? `<tr class="${cls}"><td class="pos">${r.pos}º</td><td>${esc(r.nome)}</td><td>${esc(r.sup)}</td><td class="c">${esc(r.uf)}</td><td class="r mono">${r.exec}/${r.lojas}</td><td class="r pct">${pct(r.pct)}</td><td class="r mono">${pct(r.pctv)}</td><td class="c">${chip(r.eleg)}</td></tr>`
       : `<tr class="${cls}"><td class="pos">${r.pos}º</td><td>${esc(r.nome)}</td><td class="r mono">${r.prom}</td><td class="r mono">${int(r.exec)}/${int(r.lojas)}</td><td class="r mono">${pct(r.pct)}</td><td class="r mono">${pct(r.pctf)}</td><td class="r pct">${pct(r.notaPct)}</td><td class="r mono">${pct(r.pctnp)}</td><td class="c">${chip(r.eleg)}</td></tr>`; }).join('');

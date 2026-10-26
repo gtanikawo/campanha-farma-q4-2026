@@ -5,7 +5,7 @@
   mantido para compatibilidade com o Farma Cards e para conferência.
 - Confere esse retrato com o placar original de outubro (Placar_Farma_Q4_2026_Parcial_Outubro.html):
   se algum número mudar, o build para.
-- Regra oficial desde 26/10/2026: nota = 50% % lojas executadas + 50% % frequência (visitas cobradas por janela);
+- Regra oficial desde 26/10/2026: nota = 50% % lojas executadas + 50% % frequência (Σ pesquisas ÷ Σ planejado do mês, como no Tracking);
   desempate % lojas → % frequência → % NewsPage → nome. A conferência com o placar original passa a checar
   lojas e executadas de cada pessoa e os totais (a ordem mudou de propósito com a regra nova).
 Rodar: python build_placar.py
@@ -50,8 +50,9 @@ def calcular(meses):
             if (cod_rota, loja) in vistos: continue
             vistos.add((cod_rota, loja))
             if vaga(colab): continue
-            e, c, k = (1 if pesq > 0 else 0), min(pesq, plan), norm(colab)
-            den = max(vencidas(plan, dm, dc), c)
+            # frequência como no Tracking (% Realizado Newspage): pesquisas ÷ planejado do mês, sem limite por loja
+            e, c, k = (1 if pesq > 0 else 0), pesq, norm(colab)
+            den = plan
             lojas += 1; execs += e
             p = P.setdefault(k, {'raw': colab, 'lojas': 0, 'exec': 0, 'plan': 0, 'cump': 0, 'den': 0, 'pesq': 0, 'uf': Counter(), 'sup': defaultdict(Counter)})
             p['lojas'] += 1; p['exec'] += e; p['plan'] += plan; p['cump'] += c; p['den'] += den; p['pesq'] += pesq; p['uf'][uf] += 1; p['sup'][m][sup] += 1

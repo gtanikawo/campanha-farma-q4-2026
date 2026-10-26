@@ -260,7 +260,7 @@ troca('<small>% LOJAS EXEC.</small><strong>${pct(r.pct)}</strong>', '<small>NOTA
 troca('${pct(leader.pct)} <small>DAS LOJAS EXECUTADAS</small>', '${pct(getNota(leader))} <small>NOTA OFICIAL</small>')
 troca('lojas executadas de ${number(leader.lojas)} previstas no recorte atual.', 'lojas executadas de ${number(leader.lojas)} previstas · lojas ${pct(leader.pct)} · frequência ${pct(leader.pctv)}.')
 troca('O ranking oficial continua definido por lojas executadas ÷ lojas de roteiro, com % de visitas cumpridas como desempate.', 'O ranking oficial usa a nota = 50% lojas executadas + 50% frequência, com desempate por % lojas, % frequência e % NewsPage.')
-troca('<strong>Desempate:</strong> percentual de visitas cumpridas conforme o placar oficial.', '<strong>Nota:</strong> 50% lojas executadas + 50% frequência (visitas feitas ÷ visitas já cobradas até o corte). <strong>Desempate:</strong> % lojas, depois % frequência, depois % NewsPage realizado.')
+troca('<strong>Desempate:</strong> percentual de visitas cumpridas conforme o placar oficial.', '<strong>Nota:</strong> 50% lojas executadas + 50% frequência (pesquisas NewsPage ÷ visitas planejadas no mês, como no Tracking). <strong>Desempate:</strong> % lojas, depois % frequência, depois % NewsPage realizado.')
 for velho, novo in [('% VISITAS CUMPRIDAS', '% FREQUÊNCIA'), ('VISITAS CUMPRIDAS', 'FREQUÊNCIA'), ('das visitas cumpridas', 'de frequência'), ('de visitas cumpridas', 'de frequência'),
                     ('% visitas cumpridas', '% frequência'), ('visitas cumpridas', 'frequência'), ('Visitas cumpridas', 'Frequência')]:
     h = h.replace(velho, novo)
